@@ -5,7 +5,7 @@ import logging
 import itertools
 from copy import copy
 import math
-from scipy import constants
+from scipy.constants import G
 from queue import PriorityQueue
 
 import hlt
@@ -124,7 +124,7 @@ def run():
                 move(ship.position, ship.position, ship, positions_used, command_queue)
                 ship.staying = True
 
-            elif ((ship.halite_amount > 850) or
+            elif ((ship.halite_amount > 950) or
                   (game_map.calculate_distance(ship.position, syp) + 4 >=
                    (constants.MAX_TURNS - game.turn_number))):
                 ship.returning = True
@@ -153,15 +153,21 @@ def run():
                 continue
 
             ps = PriorityQueue()
-            for x, y in itertools.product(range(game_map.width), range(game_map.height)):
-                pass
-                # todo: eventually, calculate the one with the "cheapest" path, not shortest.
-                ps.put(PP(game_map.calculate_distance(ship.position, p), p))
+            for x, y in itertools.product(range(ship.position.x-6, ship.position.x+6),
+                                          range(ship.position.y-6, ship.position.y+6)):
+                p = game_map.normalize(Position(x, y))
+                hal = game_map[p].halite_amount
+                # if p == ship.position:
+                #     continue
+                if p == syp:
+                    # Gravity for the dropoff is equivalent to halite in ship
+                    hal = ship.halite_amount
+                ps.put(PP(
+                    - (G * hal /
+                        (game_map.calculate_distance(ship.position, p) + 1) ** 2), p))
 
             p = ps.get().position
-            if (ship.halite_amount > 200 and (
-                    game_map.calculate_distance(ship.position, syp) < game_map.calculate_distance(
-                ship.position, p))):
+            if p == syp:
                 # move to drop-off
                 move(syp, ship.position, ship, positions_used, command_queue, shortest=True)
             else:
@@ -170,7 +176,7 @@ def run():
         # If the game is in the first 200 turns and you have enough halite, spawn a ship.
         # Don't spawn a ship if you currently have a ship at port, though - the ships will collide.
         if game.turn_number <= (
-                constants.MAX_TURNS // 2.8) and me.halite_amount > constants.SHIP_COST and not game_map[
+                constants.MAX_TURNS // 2.7) and me.halite_amount > constants.SHIP_COST and not game_map[
             me.shipyard].is_occupied and syp not in positions_used:
             command_queue.append(me.shipyard.spawn())
 
