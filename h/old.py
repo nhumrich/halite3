@@ -16,11 +16,6 @@ from hlt.positionals import Direction, Position
 game = hlt.Game()
 
 
-spent_so_far = 0
-
-first_seen = {}
-
-
 class PP:
     def __init__(self, priority, position):
         self.priority = priority
@@ -30,13 +25,13 @@ class PP:
         return self.priority < other.priority
 
 
-def move(target, source, ship, positions_used, command_queue, collide=False, shortest=False):
+def move(target, source, ship, positions_used, command_queue, collide=Position(-5, -5), shortest=False):
     # logging.info(f'moving to {target} from {source}')
 
     def doit(d):
         po = game.game_map.normalize(ship.position.directional_offset(d))
         # logging.info(f'testing {d}')
-        if (collide and po in dropoffs) or po not in positions_used:
+        if collide == po or po not in positions_used:  # and ((not game.game_map[po].is_occupied) or game.game_map[po].ship.owner!=game.my_id or po == ship.position):
             logging.info(f'ship {ship.id} on {source} next move on {po}')
             positions_used.append(po)
             command_queue.append(ship.move(d))
@@ -69,25 +64,14 @@ def move(target, source, ship, positions_used, command_queue, collide=False, sho
         all_possible.remove(d)
 
     while all_possible:
-        d = random.sample(all_possible, 1)[0]
-        # d = all_possible.pop()
+        #d = random.sample(all_possible, 1)[0]
+        d = all_possible.pop()
         if doit(d):
             return
-        all_possible.remove(d)
+        # all_possible.remove(d)
 
     # welp, we crash
     logging.info(f'{ship.id} crash')
-
-
-def closest_dropoff(ship):
-    min_so_far = 5000
-    closest_so_far = None
-    for do in dropoffs:
-        distance = game.game_map.calculate_distance(ship.position, do)
-        if distance < min_so_far:
-            min_so_far = distance
-            closest_so_far = do
-    return closest_so_far
 
 
 game.ready("NicksBot")
@@ -97,22 +81,16 @@ num_players = len(game.players)
 logging.info(f'{num_players} player mode.')
 
 syp = game.players[game.my_id].shipyard.position
-
-dropoffs = [syp]
-
 logging.info(syp)
 returning = set()
 
 
 def run():
-    global spent_so_far
     while True:
         game.update_frame()
         # You extract player metadata and the updated map metadata here for convenience.
         me = game.me
         game_map = game.game_map
-
-        turns_left = constants.MAX_TURNS - game.turn_number
 
         # highs = PriorityQueue()
         # spots = PriorityQueue()
@@ -126,10 +104,6 @@ def run():
         positions_used = []
         command_queue = []
         ship_queue = me.get_ships()
-        for do in me.get_dropoffs():
-            pos = do.position
-            if pos not in dropoffs:
-                dropoffs.append(pos)
 
         # top10 = [highs.get().position for _ in range(10)]
         # logging.info(top10)
@@ -138,27 +112,25 @@ def run():
         ship_queue = sorted(ship_queue, key=lambda s: game_map.calculate_distance(s.position, syp),
                             reverse=True)
 
-        dropoff = False
+        # mark enemy ships
+        for i in game.players:
+            if i == game.my_id:
+                continue
+            player = game.players[i]
+            for ship in player.get_ships():
+                for d in Direction.get_all_cardinals() + [(0,0)]:
+                    location = ship.position.directional_offset(d)
+                    if game_map.calculate_distance(location, syp) <= 4:
+                        pass
+                    else:
+                        positions_used.append(location)
+
         for ship in ship_queue:
-            if ship.id not in first_seen:
-                first_seen[ship.id] = game.turn_number
             ship.staying = False
             ship.returning = False
-            if (constants.MAX_TURNS - game.turn_number) < 4 and ship.position in dropoffs:
+            if (constants.MAX_TURNS - game.turn_number) < 4 and ship.position == syp:
                 # ignore ship completely so that it can die
                 ship.staying = True
-            # should we build a drop-off?
-            elif (len(ship_queue) > 20 and
-                    game_map.calculate_distance(ship.position, closest_dropoff(ship)) > 14 and
-                    me.halite_amount > constants.DROPOFF_COST -
-                        game_map[ship.position].halite_amount + ship.halite_amount and
-                    game.turn_number < constants.MAX_TURNS / 1.6 and
-                    not dropoff):
-                dropoff = True
-                spent_so_far += constants.DROPOFF_COST - game_map[ship.position].halite_amount
-                command_queue.append(ship.make_dropoff())
-                ship.staying = True
-                positions_used.append(ship.position)
             # can it move?
             elif (game_map[ship.position].halite_amount * 0.1) > ship.halite_amount:
                 # can't move, stay put
@@ -167,23 +139,23 @@ def run():
                 ship.staying = True
 
             elif ((ship.halite_amount > 900) or
-                  (game_map.calculate_distance(ship.position, closest_dropoff(ship)) + 4 >=
+                  (game_map.calculate_distance(ship.position, syp) + 4 >=
                    (constants.MAX_TURNS - game.turn_number))):
                 returning.add(ship.id)
                 ship.returning = True
 
-        # mark enemy ships only if 4 players
-        if num_players == 4:
-            for i in game.players:
-                if i == game.my_id:
-                    continue
-                player = game.players[i]
-                for ship in player.get_ships():
-                    for d in Direction.get_all_cardinals() + [(0, 0)]:
-                        location = ship.position.directional_offset(d)
-                        if game_map.calculate_distance(location, closest_dropoff(ship)) <= 4:
-                            pass
-                        else:
+        # mark enemy ships
+        for i in game.players:
+            if i == game.my_id:
+                continue
+            player = game.players[i]
+            for ship in player.get_ships():
+                for d in Direction.get_all_cardinals() + [(0,0)]:
+                    location = ship.position.directional_offset(d)
+                    if game_map.calculate_distance(location, syp) <= 4:
+                        pass
+                    else:
+                        if location not in positions_used:
                             positions_used.append(location)
         # for ship in ship_queue:
         #     if ship.staying:
@@ -195,20 +167,18 @@ def run():
         #         ship.staying = True
 
         for ship in ship_queue:
-            if ship.position in dropoffs:
+            if ship.position == syp:
                 returning.discard(ship.id)
                 ship.returning = False
             elif ship.id in returning and not ship.staying:
                 # move to drop-off
                 logging.info('move to dropoff')
                 ship.returning = True
-                if constants.MAX_TURNS - game.turn_number <= 10:
-                    collide = True
+                if constants.MAX_TURNS - game.turn_number <= 4:
+                    move(syp, ship.position, ship, positions_used, command_queue, collide=syp,
+                         shortest=True)
                 else:
-                    collide = False
-
-                move(closest_dropoff(ship), ship.position, ship, positions_used,
-                     command_queue, collide=collide, shortest=True)
+                    move(syp, ship.position, ship, positions_used, command_queue, shortest=True)
 
         for ship in ship_queue:
             if ship.returning or ship.staying:
@@ -221,41 +191,25 @@ def run():
                 hal = game_map[p].halite_amount
                 # if p == ship.position:
                 #     continue
-                if p in dropoffs:
+                if p == syp:
                     # Gravity for the dropoff is equivalent to halite in ship
                     hal = ship.halite_amount
                 ps.put(PP(
                     - (G * hal /
-                        (game_map.calculate_distance(ship.position, p) + 1) ** 2), p))
+                       (game_map.calculate_distance(ship.position, p) + 1) ** 2), p))
 
             p = ps.get().position
-            if p in dropoffs:
+            if p == syp:
                 # move to drop-off
-                shortest = True
+                move(syp, ship.position, ship, positions_used, command_queue, shortest=True)
             else:
-                shortest = False
-
-            move(p, ship.position, ship, positions_used, command_queue, shortest=shortest)
+                move(p, ship.position, ship, positions_used, command_queue)
 
         # If the game is in the first 200 turns and you have enough halite, spawn a ship.
         # Don't spawn a ship if you currently have a ship at port, though - the ships will collide.
-
-        halite_collected = me.halite_amount + spent_so_far - 5000
-        ship_turns = 0
-        for id, turn in first_seen.items():
-            ship_turns += game.turn_number - turn
-
-        if game.turn_number < 20:
-            avg_per_ship_per_turn = 2000
-        else:
-            avg_per_ship_per_turn = halite_collected / ship_turns / 1.1
-
-        if (avg_per_ship_per_turn * turns_left > 1600 and
-                me.halite_amount > constants.SHIP_COST and
-                not game_map[me.shipyard].is_occupied and
-                not dropoff and
-                syp not in positions_used):
-            spent_so_far += constants.SHIP_COST
+        if game.turn_number <= (
+                constants.MAX_TURNS // 2.4) and me.halite_amount > constants.SHIP_COST and not game_map[
+            me.shipyard].is_occupied and syp not in positions_used:
             command_queue.append(me.shipyard.spawn())
 
             # Send your moves back to the game environment, ending this turn.
