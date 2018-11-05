@@ -240,8 +240,10 @@ def run():
                 move(ship.position, ship.position, ship, positions_used, command_queue)
             else:
                 ps = PriorityQueue()
-                for x, y in itertools.product(range(ship.position.x-20, ship.position.x+20),
-                                              range(ship.position.y-20, ship.position.y+20)):
+                best_so_far = 0
+                current_best = 0
+                for x, y in itertools.product(range(ship.position.x-25, ship.position.x+25),
+                                              range(ship.position.y-25, ship.position.y+25)):
                     p = game_map.normalize(Position(x, y))
                     if p in destinations:
                         continue
@@ -254,13 +256,16 @@ def run():
                         hal = ship.halite_amount
                     # if cell.ship and cell.ship.owner != me.id:
                     #         hal -= 200
-                    ps.put(PP(
+                    # ps.put(PP(
                         # - (0.07 * hal /
                         #     (game_map.calculate_distance(ship.position, p) + 1) ** 2), p))
-                        - (hal /
-                           (game_map.calculate_distance(ship.position, p) + 1)), p))
-
-                p = ps.get().position
+                    p_val = (hal /
+                           (game_map.calculate_distance(ship.position, p) + 1))
+                    if p_val > best_so_far:
+                        best_so_far = p_val
+                        current_best = p
+                # p = ps.get().position
+                p = current_best
                 if p in dropoffs:
                     # move to drop-off
                     shortest = True
