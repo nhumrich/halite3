@@ -96,7 +96,7 @@ def closest_dropoff(position):
     return closest_so_far
 
 
-game.ready("NicksBot")
+game.ready("OtherBot")
 logging.info("Successfully created bot! My Player ID is {}.".format(game.my_id))
 
 num_players = len(game.players)
@@ -161,12 +161,12 @@ def run():
                 ship.staying = True
             # should we build a drop-off?
             elif (len(ship_queue) > 15 * len(dropoffs) and
-                    game_map.calculate_distance(ship.position, closest_dropoff(ship.position)) > 15 and
-                    me.halite_amount > constants.DROPOFF_COST -
-                        game_map[ship.position].halite_amount + ship.halite_amount and
-                    game.turn_number < constants.MAX_TURNS / 1.7 and
-                    # len(dropoffs) < 4 and
-                    not dropoff):
+                  game_map.calculate_distance(ship.position, closest_dropoff(ship.position)) > 15 and
+                  me.halite_amount > constants.DROPOFF_COST -
+                  game_map[ship.position].halite_amount + ship.halite_amount and
+                  game.turn_number < constants.MAX_TURNS / 1.7 and
+                  # len(dropoffs) < 4 and
+                  not dropoff):
                 dropoff = True
                 spent_so_far += constants.DROPOFF_COST - game_map[ship.position].halite_amount
                 command_queue.append(ship.make_dropoff())
@@ -198,12 +198,12 @@ def run():
                     for d in Direction.get_all_cardinals() + [(0, 0)]:
                         location = game_map.normalize(ship.position.directional_offset(d))
                         if game_map.calculate_distance(location,
-                                                       closest_dropoff(ship.position)) <= 2:
+                                                       closest_dropoff(ship.position)) <= 4:
                             pass
                         # elif (ship.halite_amount > 950 and
                         #         len(game.players[ship.owner].get_ships()) < len(ship_queue)):
-                            # its fine to collide with a high halite ship and steal its halite
-                            # pass
+                        # its fine to collide with a high halite ship and steal its halite
+                        # pass
                         else:
                             positions_used.add(location)
         # for ship in ship_queue:
@@ -255,10 +255,10 @@ def run():
                     # if cell.ship and cell.ship.owner != me.id:
                     #         hal -= 200
                     ps.put(PP(
-                        # - (0.07 * hal /
-                        #     (game_map.calculate_distance(ship.position, p) + 1) ** 2), p))
-                        - (hal /
-                           (game_map.calculate_distance(ship.position, p) + 1)), p))
+                        - (0.07 * hal /
+                            (game_map.calculate_distance(ship.position, p) + 1) ** 2), p))
+                        # - (hal /
+                        #    (game_map.calculate_distance(ship.position, p) + 1)), p))
 
                 p = ps.get().position
                 if p in dropoffs:
@@ -288,8 +288,8 @@ def run():
         logging.info(f'turn {game.turn_number} has acg {avg_per_ship_per_turn}')
 
         if (6 * turns_left > 1400 and
-        # if (turns_left > 175 and
-        # if (avg_per_ship_per_turn * turns_left >= 1400 and
+                # if (turns_left > 175 and
+                # if (avg_per_ship_per_turn * turns_left >= 1400 and
                 me.halite_amount >= constants.SHIP_COST and
                 not game_map[me.shipyard].is_occupied and
                 not dropoff and
