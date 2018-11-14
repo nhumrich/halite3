@@ -3,20 +3,38 @@
 import random
 import logging
 import itertools
-from copy import copy
-import math
-from scipy.constants import G
-from queue import PriorityQueue
+import argparse
+import numpy as np
 
 import hlt
 from hlt import constants
 from hlt.positionals import Direction, Position
 
-# This game object contains the initial game state.
+##### CONSTANTS
+RETURN_AMOUNT = 850
+parser = argparse.ArgumentParser(description='')
+parser.add_argument('-s', action="store_true", default=False)
+# parser.add_argument('-b', action="store", dest="b")
+# parser.add_argument('-c', action="store", dest="c", type=int)
+ns = parser.parse_args()
+
+NEW_SPAWN = ns.s
+NAME = 'NicksBot'
+if NEW_SPAWN:
+    NAME = 'Alternate'
+######
+
+# if not NEW_SPAWN:
+#     import pydevd
+#     pydevd.settrace('localhost', port=8989, stdoutToServer=True, stderrToServer=True)
+
+# logging.info(f'spawn type: {NEW_SPAWN}')
+
 game = hlt.Game()
 
-
+logging.info(f'spawn type: {NEW_SPAWN}')
 spent_so_far = 0
+np.set_printoptions(threshold=np.nan)
 
 first_seen = {}
 
@@ -96,8 +114,12 @@ def closest_dropoff(position):
     return closest_so_far
 
 
-game.ready("OtherBot")
-logging.info("Successfully created bot! My Player ID is {}.".format(game.my_id))
+def get_halite_amount():
+    hal = 0
+    for x, y in itertools.product(range(game.game_map.width), range(game.game_map.height)):
+        hal += game.game_map[Position(x, y)].halite_amount
+    return hal
+
 
 num_players = len(game.players)
 logging.info(f'{num_players} player mode.')
@@ -110,9 +132,20 @@ collection_per_turn = []
 logging.info(syp)
 returning = set()
 
+starting_halite_amount = get_halite_amount()
+
+# distance_array = np.array([[abs(i) + abs(j) + 1 for i in range(-20, 21)] for j in range(-20, 21)])
+# distance_2 = np.square(distance_array)
+
+game.ready(NAME)
+logging.info("Successfully created bot! My Player ID is {}.".format(game.my_id))
+
 
 def run():
     global spent_so_far
+    destinations = {}
+    ships_des = {}
+
     while True:
         game.update_frame()
         # You extract player metadata and the updated map metadata here for convenience.
@@ -120,20 +153,17 @@ def run():
         game_map = game.game_map
 
         turns_left = constants.MAX_TURNS - game.turn_number
+        halite_left = get_halite_amount()
+        halite_percent = halite_left / starting_halite_amount
 
-        # highs = PriorityQueue()
+        highs = []
         # spots = PriorityQueue()
-        # for x, y in itertools.product(range(game_map.width), range(game_map.height)):
-        #     highs.put(
-        #         PP(
-        #             (constants.MAX_HALITE - game_map[Position(x, y)].halite_amount * .25) +
-        #                 (game_map.calculate_distance(Position(x,y),(0, 0) syp)) * 2,
-        #             Position(x, y)))
+        for x, y in itertools.product(range(game_map.width), range(game_map.height)):
+            highs.append(Position(x, y))
 
+        highs = sorted(highs, key=lambda p: game_map[p].halite_amount, reverse=True)[:150]
         positions_used = set()
-        destinations = set()
         command_queue = []
-
 
         ship_queue = me.get_ships()
         for do in me.get_dropoffs():
@@ -147,6 +177,8 @@ def run():
         # sort ships by proximity to shipyard
         ship_queue = sorted(ship_queue, key=lambda s: game_map.calculate_distance(s.position, syp),
                             reverse=True)
+        # ship_queue = sorted(ship_queue, key=lambda s: s.id,
+        #                     reverse=True)
 
         dropoff = False
         for ship in ship_queue:
@@ -155,16 +187,18 @@ def run():
             ship.staying = False
             ship.returning = False
             if ship.position in destinations:
-                destinations.remove(ship.position)
+                del destinations[ship.position]
             if (constants.MAX_TURNS - game.turn_number) < 4 and ship.position in dropoffs:
                 # ignore ship completely so that it can die
                 ship.staying = True
             # should we build a drop-off?
-            elif (len(ship_queue) > 15 * len(dropoffs) and
+            elif (len(ship_queue) >= 10 * len(dropoffs) and
+                  ship.position in highs and
                   game_map.calculate_distance(ship.position, closest_dropoff(ship.position)) > 15 and
                   me.halite_amount > constants.DROPOFF_COST -
                   game_map[ship.position].halite_amount + ship.halite_amount and
-                  game.turn_number < constants.MAX_TURNS / 1.7 and
+                  game.turn_number < constants.MAX_TURNS * 0.75 and
+                  halite_percent > 0.4 and
                   # len(dropoffs) < 4 and
                   not dropoff):
                 dropoff = True
@@ -178,7 +212,7 @@ def run():
                 # logging.info(f'ship {ship.id} staying with {ship.halite_amount} avaliable')
                 move(ship.position, ship.position, ship, positions_used, command_queue)
                 ship.staying = True
-            elif ((ship.halite_amount > 900) or
+            elif ((ship.halite_amount > RETURN_AMOUNT) or
                   (game_map.calculate_distance(ship.position, closest_dropoff(ship.position)) + 4 >=
                    (constants.MAX_TURNS - game.turn_number))):
                 returning.add(ship.id)
@@ -188,8 +222,12 @@ def run():
                 ship.returning = True
                 returning.add(ship.id)
 
-        # mark enemy ships only if 4 players
-        if num_players == 4:
+        # mark enemy ships if we don't control more than half the ships on the board
+        total_num_of_ships = 0
+        for i in game.players:
+            total_num_of_ships += len(game.players[i].get_ships())
+
+        if len(ship_queue) < total_num_of_ships:
             for i in game.players:
                 if i == game.my_id:
                     continue
@@ -198,7 +236,7 @@ def run():
                     for d in Direction.get_all_cardinals() + [(0, 0)]:
                         location = game_map.normalize(ship.position.directional_offset(d))
                         if game_map.calculate_distance(location,
-                                                       closest_dropoff(ship.position)) <= 4:
+                                                       closest_dropoff(ship.position)) <= 1:
                             pass
                         # elif (ship.halite_amount > 950 and
                         #         len(game.players[ship.owner].get_ships()) < len(ship_queue)):
@@ -206,14 +244,6 @@ def run():
                         # pass
                         else:
                             positions_used.add(location)
-        # for ship in ship_queue:
-        #     if ship.staying:
-        #         continue
-        #     if (not ship.returning and
-        #             game_map[ship.position].halite_amount > constants.MAX_HALITE // 14):
-        #         # collect while we are here
-        #         move(ship.position, ship.position, ship, positions_used, command_queue)
-        #         ship.staying = True
 
         for ship in ship_queue:
             if ship.position in dropoffs:
@@ -234,42 +264,48 @@ def run():
         for ship in ship_queue:
             if ship.returning or ship.staying:
                 continue
-            elif (ship.halite_amount + (game_map[ship.position].halite_amount * 0.25) > 900):
+            elif (ship.halite_amount + (game_map[ship.position].halite_amount * 0.25) >
+                  RETURN_AMOUNT):
                 # will staying make me cross over the line?
                 ship.staying = True
                 move(ship.position, ship.position, ship, positions_used, command_queue)
+
             else:
-                ps = PriorityQueue()
-                for x, y in itertools.product(range(ship.position.x-20, ship.position.x+20),
-                                              range(ship.position.y-20, ship.position.y+20)):
-                    p = game_map.normalize(Position(x, y))
+                logging.info(f'd {destinations}')
+
+                highest_so_far = game_map[ship.position].halite_amount
+                best = ship.position
+                for p in highs:
+                    # p = game_map.normalize(p)
                     if p in destinations:
                         continue
-                    cell = game_map[p]
-                    hal = cell.halite_amount
-                    # if p == ship.position:
-                    #     continue
+                    hal = game_map[p].halite_amount
+
                     if p in dropoffs:
-                        # Gravity for the dropoff is equivalent to halite in ship
                         hal = ship.halite_amount
-                    # if cell.ship and cell.ship.owner != me.id:
-                    #         hal -= 200
-                    ps.put(PP(
-                        - (0.07 * hal /
-                            (game_map.calculate_distance(ship.position, p) + 1) ** 2), p))
-                        # - (hal /
-                        #    (game_map.calculate_distance(ship.position, p) + 1)), p))
 
-                p = ps.get().position
-                if p in dropoffs:
-                    # move to drop-off
-                    shortest = True
-                else:
-                    shortest = False
-                destinations.add(p)
-                move(p, ship.position, ship, positions_used, command_queue, shortest=shortest)
+                    weighted = hal / (game_map.calculate_distance(ship.position, p) + 1)
+                    if weighted > highest_so_far:
+                        best = p
+                    if p in destinations and destinations[p] != ship.id:
+                        # logging.info(f'nope on {p} for ship {ship.id}')
+                        continue
 
-        # Don't spawn a ship if you currently have a ship at port, though - the ships will collide.
+                p = best
+                logging.info(f'Ship {ship.id} moving to position {p}')
+
+                if ship.id in ships_des:
+                    if ships_des[ship.id] !=p:
+                        if ships_des[ship.id] in destinations:
+                            del destinations[ships_des[ship.id]]
+                        else:
+                            logging.info(f'Mismatch. Expected {ships_des[ship.id]} in {destinations}')
+                ships_des[ship.id] = p
+                destinations[p] = ship.id
+                # if p in dropoffs:
+                #     p.
+                move(p, ship.position, ship, positions_used, command_queue, shortest=False)
+                ''''''
 
         halite_collected = me.halite_amount + spent_so_far - 5000
         ship_turns = 0
@@ -285,19 +321,21 @@ def run():
             #               collection_per_turn[game.turn_number - 21]
             avg_per_ship_per_turn = halite_collected / ship_turns / 1.1
 
-        logging.info(f'turn {game.turn_number} has acg {avg_per_ship_per_turn}')
+        logging.info(f'turn {game.turn_number} has avg {avg_per_ship_per_turn}')
 
-        if (6 * turns_left > 1400 and
-                # if (turns_left > 175 and
-                # if (avg_per_ship_per_turn * turns_left >= 1400 and
+        # if (avg_per_ship_per_turn * turns_left >= 1400 and
+        if (
+                ((turns_left > 150 and not NEW_SPAWN) or
+                 (avg_per_ship_per_turn * turns_left >= 1800 and NEW_SPAWN)) and
                 me.halite_amount >= constants.SHIP_COST and
-                not game_map[me.shipyard].is_occupied and
                 not dropoff and
+                halite_percent > 0.4 and
                 syp not in positions_used):
             spent_so_far += constants.SHIP_COST
             command_queue.append(me.shipyard.spawn())
 
             # Send your moves back to the game environment, ending this turn.
+        logging.info(command_queue)
         game.end_turn(command_queue)
 
 
