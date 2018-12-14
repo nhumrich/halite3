@@ -25,7 +25,7 @@ class Game:
         num_players, self.my_id = map(int, read_input().split())
 
         logging.basicConfig(
-            filename="bot-{}.log".format(self.my_id),
+            filename="/tmp/bot-{}.log".format(self.my_id),
             filemode="w",
             level=logging.DEBUG,
         )

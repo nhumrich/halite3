@@ -1,9 +1,9 @@
+from collections import defaultdict
 
 import subprocess
 import random
 import math
 import json
-import boto
 from typing import List
 
 
@@ -96,6 +96,12 @@ class Bot:
     def __str__(self):
         return self.get_string()
 
+    def __repr__(self):
+        s = f'name:{self.name}'
+        for c in self.constants:
+            s += f' {c.name}:{c.val}'
+        return s
+
     def __eq__(self, other):
         return self.constants == other.constants
 
@@ -109,43 +115,57 @@ class Bot:
 
 def do_round(bots: List[Bot]):
 
-    run_string = ['./halite', '--replay-directory', 'replays/', '--width', '32', '--height', '32', '--results-as-json']
-    command = 'python3 run.py '
+    run_string = ['aws', 'lambda',  'invoke', '--invocation-type', 'RequestResponse',
+                  '--function-name', 'nickgym', '--region', 'us-west-2', '--log-type', 'Tail',
+                  '/dev/stderr', '--payload']
 
-
-    for b in bots:
-        print(b)
-        bot_line = command
-        run_string.append(command + b.get_string())
-
-    scores = {'0': 0, '1': 0, '2': 0, '3': 0}
-    for _ in range(2):
+    scores = defaultdict(lambda: 0)
+    processes = []
+    for i in range(len(bots)):
         # we run 4 games total for each pairing, 2 at a single time
-        processes = []
-        for __ in range(2):
-            # we can play two games at once
-            processes.append(subprocess.Popen(run_string, stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+        a = bots[i]
+        b = bots[i-1]
+        for __ in range(3):
+            # each bot plays its opponent three times
+            bot_strings = {}
 
-        for p in processes:
-            outs, errs = p.communicate()
-            results = outs.decode()
-            j = json.loads(results)
-            # print(j['stats'])
-            map = {}
-            rank = []
-            for k, v in j['stats'].items():
-                map[k] = v['score']
+            for i, n in enumerate([a, b]):
+                bot_strings[i] = n.get_string()
 
-            print(sorted(map.items(), key=lambda d: d[1], reverse=True))
-            rank = sorted(map, key=lambda d: map[d], reverse=True)
-            # print(rank)
-            for points, i in enumerate(reversed(rank)):
-                scores[i] = scores[i] + points
+            processes.append((a, b, subprocess.Popen(run_string + [json.dumps(bot_strings)],
+                                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)))
+
+    for a, b, p in processes:
+        outs, errs = p.communicate()
+        results = errs.decode()
+
+        # print(f'{a} vs {b}')
+        try:
+            response = json.loads(results)
+        except json.JSONDecodeError:
+            print('error decoding:', results)
+            continue
+        try:
+            j = json.loads(response['result'])
+        except json.JSONDecodeError:
+            print('error decoding response:', response['result'], response['err'])
+            continue
+        map = {}
+        for k, v in j['stats'].items():
+            map[k] = v['score']
+
+        # print(sorted(map.items(), key=lambda d: d[1], reverse=True))
+        rank = sorted(map, key=lambda d: map[d], reverse=True)
+        # print(rank)
+        name_map = {'0': a, '1': b}
+        for points, i in enumerate(reversed(rank)):
+            scores[name_map[i]] += points
 
     print(scores)
     final = sorted(scores, key=lambda d: scores[d], reverse=True)
-    print('Winner:', final[0])
-    return final[0], final[1]
+    # print('Winner:', final[0])
+    print(final)
+    return final
 
 
 def mutate(seed, name):
@@ -157,28 +177,28 @@ def mutate(seed, name):
 
 def run_gym():
     # start with random bots
-    seed_bot = Bot('0', constants=seed())
-    bot1 = mutate(seed_bot, '1')
-    while True:
-        bot1 = mutate(seed_bot, '1')
-        bot2 = mutate(seed_bot, '2')
-        bot3 = mutate(Bot('a'), '3')
+    bots = [Bot(str(i)) for i in range(60)]
+    # seed_bot = Bot('0', constants=seed())
+    # seed_bot2 = Bot('1', constants=seed())
 
-        bots = [seed_bot, bot1, bot2, bot3]
+    winners = do_round(bots)[:16]
+    for i in range(5):
+        mutations = []
+        for b in winners:
+            for i in range(4):
+                mutations.append(mutate(b, b.name + '-' + str(i)))
 
-        winner, second = do_round(bots)
+        bots = winners + mutations
+        while len(winners) > 4:
+            random.shuffle(bots)
 
-        # winner gets to mutate
-        winning_bot, *losers = [b for b in bots if b.name == winner]
-        bot1, *others = [b for b in bots if b.name == second]
-        winning_bot.name = '0'
+            winners = do_round(bots)[:len(bots)//2]
+            bots = winners
 
-        bot1.name = '1'
+    while len(winners) > 1:
+        winners = do_round(winners)[:len(bots)//2]
+    print(winners)
 
-        seed_bot = winning_bot
-
-        for b in losers:
-            bots_seen.add(b)
 
 
 def seed():

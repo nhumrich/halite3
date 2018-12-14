@@ -5,9 +5,10 @@ import logging
 from copy import copy
 import itertools
 import argparse
-import numpy as np
+# import numpy as np
 
 import hlt
+# constants = hlt.constants
 from hlt import constants
 from hlt.positionals import Direction, Position
 
@@ -33,84 +34,158 @@ args = parser.parse_args()
 
 game = hlt.Game()
 size = game.game_map.width
+player_num = len(game.players)
 
 const_dict = {
-    32: {
-        'return_amount': 843,
-        'look_amount': 299,
-        'so_look_amount': 66,
-        'ship_do_ratio': 26,
-        'do_distance': 9,
-        'do_turn_factor': 0.4,
-        'do_halite_factor': 0.9,
-        'distance_factor': 1.1,
-        'stay_factor': 4.4,
+    2: {
+        32: {
+        'return_amount': 930,
+        'look_amount': 225,
+        'so_look_amount': 183,
+        'ship_do_ratio': 29,
+        'do_distance': 28,
+        'do_turn_factor': 0.2,
+        'do_halite_factor': 0.8,
+        'distance_factor': 2.4,
+        'stay_factor': 4.1,
         'enemy_factor': 1.0,
-        'build_factor': 1512,
-        'build_halite_limit': 0.3
+        'build_factor': 1633,
+        'build_halite_limit': 0.4
+        },
+        40: {
+            'return_amount': 847,
+            'look_amount': 222,
+            'so_look_amount': 170,
+            'ship_do_ratio': 18,
+            'do_distance': 13,
+            'do_turn_factor': 0.9,
+            'do_halite_factor': 0.7,
+            'distance_factor': 3.1,
+            'stay_factor': 2.1,
+            'enemy_factor': 1.0,
+            'build_factor': 3429,
+            'build_halite_limit': 0.2
+        },
+        48: {
+            'return_amount': 843,
+            'look_amount': 226,
+            'so_look_amount': 226,
+            'ship_do_ratio': 5,
+            'do_distance': 23,
+            'do_turn_factor': 0.6,
+            'do_halite_factor': 0.7,
+            'distance_factor': 3.0,
+            'stay_factor': 2.3,
+            'enemy_factor': 1.0,
+            'build_factor': 1210,
+            'build_halite_limit': 0.5
+        },
+        56: {
+            'return_amount': 843,
+            'look_amount': 245,
+            'so_look_amount': 167,
+            'ship_do_ratio': 27,
+            'do_distance': 25,
+            'do_turn_factor': 0.7,
+            'do_halite_factor': 0.2,
+            'distance_factor': 1.8,
+            'stay_factor': 3.7,
+            'enemy_factor': 1.0,
+            'build_factor': 2180,
+            'build_halite_limit': 0.3
+        },
+        64: {
+            'return_amount': 843,
+            'look_amount': 184,
+            'so_look_amount': 42,
+            'ship_do_ratio': 15,
+            'do_distance': 16,
+            'do_turn_factor': 0.6,
+            'do_halite_factor': 0.1,
+            'distance_factor': 0.8,
+            'stay_factor': 3.9,
+            'enemy_factor': 1.0,
+            'build_factor': 1168,
+            'build_halite_limit': 0.6
+        },},
+    4: {
+        32: {
+            'return_amount': 930,
+            'look_amount': 299,
+            'so_look_amount': 66,
+            'ship_do_ratio': 26,
+            'do_distance': 9,
+            'do_turn_factor': 0.4,
+            'do_halite_factor': 0.9,
+            'distance_factor': 1.1,
+            'stay_factor': 4.4,
+            'enemy_factor': 1.0,
+            'build_factor': 1512,
+            'build_halite_limit': 0.3
 
-    },
-    40: {
-        'return_amount': 847,
-        'look_amount': 222,
-        'so_look_amount': 170,
-        'ship_do_ratio': 18,
-        'do_distance': 13,
-        'do_turn_factor': 0.9,
-        'do_halite_factor': 0.7,
-        'distance_factor': 3.1,
-        'stay_factor': 2.1,
-        'enemy_factor': 1.0,
-        'build_factor': 3429,
-        'build_halite_limit': 0.2
-    },
-    48: {
-        'return_amount': 843,
-        'look_amount': 226,
-        'so_look_amount': 226,
-        'ship_do_ratio': 5,
-        'do_distance': 23,
-        'do_turn_factor': 0.6,
-        'do_halite_factor': 0.7,
-        'distance_factor': 3.0,
-        'stay_factor': 2.3,
-        'enemy_factor': 1.0,
-        'build_factor': 1210,
-        'build_halite_limit': 0.5
-    },
-    56: {
-        'return_amount': 843,
-        'look_amount': 245,
-        'so_look_amount': 167,
-        'ship_do_ratio': 27,
-        'do_distance': 25,
-        'do_turn_factor': 0.7,
-        'do_halite_factor': 0.2,
-        'distance_factor': 1.8,
-        'stay_factor': 3.7,
-        'enemy_factor': 1.0,
-        'build_factor': 2180,
-        'build_halite_limit': 0.3
-    },
-    64: {
-        'return_amount': 843,
-        'look_amount': 184,
-        'so_look_amount': 42,
-        'ship_do_ratio': 15,
-        'do_distance': 16,
-        'do_turn_factor': 0.6,
-        'do_halite_factor': 0.1,
-        'distance_factor': 0.8,
-        'stay_factor': 3.9,
-        'enemy_factor': 1.0,
-        'build_factor': 1168,
-        'build_halite_limit': 0.6
-    },
+        },
+        40: {
+            'return_amount': 930,
+            'look_amount': 222,
+            'so_look_amount': 170,
+            'ship_do_ratio': 18,
+            'do_distance': 13,
+            'do_turn_factor': 0.9,
+            'do_halite_factor': 0.7,
+            'distance_factor': 3.1,
+            'stay_factor': 2.1,
+            'enemy_factor': 1.0,
+            'build_factor': 3429,
+            'build_halite_limit': 0.2
+        },
+        48: {
+            'return_amount': 843,
+            'look_amount': 226,
+            'so_look_amount': 226,
+            'ship_do_ratio': 5,
+            'do_distance': 23,
+            'do_turn_factor': 0.6,
+            'do_halite_factor': 0.7,
+            'distance_factor': 3.0,
+            'stay_factor': 2.3,
+            'enemy_factor': 1.0,
+            'build_factor': 1210,
+            'build_halite_limit': 0.5
+        },
+        56: {
+            'return_amount': 843,
+            'look_amount': 245,
+            'so_look_amount': 167,
+            'ship_do_ratio': 27,
+            'do_distance': 25,
+            'do_turn_factor': 0.7,
+            'do_halite_factor': 0.2,
+            'distance_factor': 1.8,
+            'stay_factor': 3.7,
+            'enemy_factor': 1.0,
+            'build_factor': 2180,
+            'build_halite_limit': 0.3
+        },
+        64: {
+            'return_amount': 843,
+            'look_amount': 184,
+            'so_look_amount': 42,
+            'ship_do_ratio': 15,
+            'do_distance': 16,
+            'do_turn_factor': 0.6,
+            'do_halite_factor': 0.1,
+            'distance_factor': 0.8,
+            'stay_factor': 3.9,
+            'enemy_factor': 1.0,
+            'build_factor': 1168,
+            'build_halite_limit': 0.6
+        },
+    }
 }
 
 
 def get_constant(name, a, b):
-    result = getattr(args, name) or const_dict[size].get(name)
+    result = getattr(args, name) or const_dict[player_num][size].get(name)
     # if result is None:
     #     if isinstance(a, int):
     #         result = random.randint(a, b)
@@ -122,7 +197,7 @@ def get_constant(name, a, b):
 
 
 # RETURN_AMOUNT = get_constant('return_amount', 500, 1000)
-RETURN_AMOUNT = 1200   # basically makes this variable and calulations useless
+RETURN_AMOUNT = 930
 LOOK_AMOUNT = get_constant('look_amount', 10, 1000)
 SO_LOOK_AMOUNT = get_constant('so_look_amount', 2, 1000)
 SHIP_DO_RATIO = get_constant('ship_do_ratio', 5, 30)
@@ -156,7 +231,7 @@ else:
 astar_cache = {}
 
 spent_so_far = 0
-np.set_printoptions(threshold=np.nan)
+# np.set_printoptions(threshold=np.nan)
 
 first_seen = {}
 
@@ -363,7 +438,7 @@ def run():
                 d = ships_des.pop(ship.id, None)
                 destinations.pop(d, None)
             # can it move?
-            elif (game_map[ship.position].halite_amount * (1/constants.MOVE_COST_RATIO)) > ship.halite_amount:
+            elif (game_map[ship.position].halite_amount * (1 / constants.MOVE_COST_RATIO)) > ship.halite_amount:
                 # can't move, stay put
                 # logging.info(f'ship {ship.id} staying with {ship.halite_amount} avaliable')
                 move(ship.position, ship.position, ship, positions_used, command_queue)
@@ -383,7 +458,7 @@ def run():
 
         if len(ship_queue) < len(enemy_locations):
             for pos in enemy_locations:
-                for d in Direction.get_all_cardinals() + [(0, 0)]:
+                for d in Direction.get_all_cardinals():
                     location = game_map.normalize(pos.directional_offset(d))
                     if game_map.calculate_distance(location,
                                                    closest_dropoff(pos)) > 1:
@@ -491,8 +566,8 @@ def run():
                 halite_percent > BUILD_HALITE_LIMIT and
                 syp not in positions_used):
             spent_so_far += constants.SHIP_COST
+            positions_used.add(syp)
             command_queue.append(me.shipyard.spawn())
-
             # Send your moves back to the game environment, ending this turn.
         logging.info(command_queue)
         game.end_turn(command_queue)

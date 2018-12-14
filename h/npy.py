@@ -4,11 +4,8 @@ import random
 import logging
 import itertools
 import argparse
-import math
 import numpy as np
-import scipy as sp
 import scipy.signal
-from queue import PriorityQueue
 
 import hlt
 from hlt import constants
