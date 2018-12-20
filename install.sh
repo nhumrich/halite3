@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-python3.6 -m pip install --system --target . numpy
+python3.6 -m pip install --target . numpy

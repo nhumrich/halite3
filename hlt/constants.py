@@ -48,17 +48,17 @@ const_dict = {
             'build_halite_limit': 0.4
         },
         48: {
-            'return_amount': 930,
-            'look_amount': 240,
-            'so_look_amount': 130,
-            'ship_do_ratio': 21,
+            'return_amount': 597,
+            'look_amount': 278,
+            'so_look_amount': 77,
+            'ship_do_ratio': 24,
             'do_distance': 6,
-            'do_turn_factor': 0.7,
+            'do_turn_factor': 0.9,
             'do_halite_factor': 0.3,
-            'distance_factor': 2.4,
-            'stay_factor': 4.5,
+            'distance_factor': 1.4,
+            'stay_factor': 3.5,
             'enemy_factor': 1.0,
-            'build_factor': 2178,
+            'build_factor': 1383,
             'build_halite_limit': 0.4
         },
         56: {

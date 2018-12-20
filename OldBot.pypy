@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import math
 
 import random
 import logging
@@ -47,9 +46,6 @@ class PP:
 
     def __lt__(self, other):
         return self.priority < other.priority
-
-    def __repr__(self):
-        return f"PP:{self.priority}-{self.position}"
 
 
 def find_best_path_to_target():
@@ -155,7 +151,7 @@ logging.info("Successfully created bot! My Player ID is {}.".format(game.my_id))
 def run():
     global spent_so_far
 
-    for cur_turn in range(1000):
+    while True:
         ships_des = {}
         destinations = {}
         game.update_frame()
@@ -171,30 +167,9 @@ def run():
         # spots = PriorityQueue()
         for x, y in itertools.product(range(game_map.width), range(game_map.height)):
             highs.append(Position(x, y))
-        """
-                for x, y in itertools.product(range(game_map.width), range(game_map.height)):
-            total_so_far = 0
-            current_p = Position(x, y)
-            for x1, y2 in itertools.product(range(-4, 5), range(-4, 5)):
-                offset = (x1, y2)
-                new_pos = game_map.normalize(current_p.directional_offset(offset))
-                # logging.info(f'current: {current_p} offset:{offset} new_pos:{new_pos}')
-                spot_amount = game_map[new_pos].halite_amount
-                # if cur_turn == 0:
-                #     logging.info(f'{new_pos} = {spot_amount}')
-                if x1 == 0 and y2 == 0:
-                    total_so_far += spot_amount
-                else:
-                    total_so_far += 255 * math.sqrt(spot_amount / 2048)
-                    # total_so_far += spot_amount
-            highs.append(PP(total_so_far, Position(x,y)))"""
 
         enemy_locations = {ship.position for i in game.players for ship in game.players[i].get_ships() if game.players[i].id != game.my_id}
 
-        """
-        logging.info(sorted(highs, reverse=True)[:10])
-        highs = [pp.position for pp in sorted(highs, reverse=True)[:constants.LOOK_AMOUNT]]
-        logging.info(highs[:10])"""
         highs = sorted(highs, key=lambda p: game_map[p].halite_amount, reverse=True)[:constants.LOOK_AMOUNT]
         do_spots = highs[:constants.SO_LOOK_AMOUNT]
         positions_used = set()
@@ -212,10 +187,10 @@ def run():
         # logging.info(top10)
 
         # sort ships by proximity to shipyard
-        # ship_queue = sorted(ship_queue, key=lambda s: game_map.calculate_distance(s.position, syp),
+        ship_queue = sorted(ship_queue, key=lambda s: game_map.calculate_distance(s.position, syp),
+                            reverse=True)
+        # ship_queue = sorted(ship_queue, key=lambda s: s.id,
         #                     reverse=True)
-        # sort ships by id
-        ship_queue = sorted(ship_queue, key=lambda s: s.id)
 
         dropoff = False
         for ship in ship_queue:
@@ -311,7 +286,7 @@ def run():
         while len(remaining_ships) > 0:
             ship = remaining_ships.pop(0)
             if (ship.halite_amount + ship.collect_amount >
-                  constants.RETURN_AMOUNT):
+                    constants.RETURN_AMOUNT):
                 # will staying make me cross over the line?
                 ship.staying = True
                 move(ship.position, ship.position, ship, positions_used, command_queue)

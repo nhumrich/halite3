@@ -114,7 +114,7 @@ class Bot:
 
 
 def do_round(bots: List[Bot]):
-    run_string = ['./halite', '--replay-directory', 'replays/', '--width', '40', '--height', '40',
+    run_string = ['./halite', '--replay-directory', 'replays/', '--width', '48', '--height', '48',
                   '--results-as-json']
 
     scores = defaultdict(lambda: 0)
