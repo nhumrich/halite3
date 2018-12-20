@@ -1,8 +1,11 @@
 import abc
 
+import math
+
 from . import commands, constants
 from .positionals import Direction, Position
 from .common import read_input
+from . import globals
 
 
 class Entity(abc.ABC):
@@ -17,7 +20,7 @@ class Entity(abc.ABC):
     @staticmethod
     def _generate(player_id):
         """
-        Method which creates an entity for a specific player given input from the engine.
+        Method which creates an entity for    a specific player given input from the engine.
         :param player_id: The player id for the player who owns this entity
         :return: An instance of Entity along with its id
         """
@@ -28,6 +31,12 @@ class Entity(abc.ABC):
         return "{}(id={}, {})".format(self.__class__.__name__,
                                       self.id,
                                       self.position)
+
+    def __hash__(self):
+        return hash((self.owner, self.id))
+
+    def __eq__(self, other):
+        return self.owner == other.owner and self.id == other.id
 
 
 class Dropoff(Entity):
@@ -41,7 +50,8 @@ class Shipyard(Entity):
     """
     Shipyard class to house shipyards
     """
-    def spawn(self):
+    @staticmethod
+    def spawn():
         """Return a move to spawn a new ship."""
         return commands.GENERATE
 
@@ -50,14 +60,40 @@ class Ship(Entity):
     """
     Ship class to house ship entities
     """
+    __ships = {}
+
     def __init__(self, owner, id, position, halite_amount):
         super().__init__(owner, id, position)
         self.halite_amount = halite_amount
+        self._new_turn()
+        self.returning = False
+
+    def _new_turn(self):
+        self.inspired = False
+        self.collect_amount = 0
+        self.staying = False
+        self.dest = None
 
     @property
     def is_full(self):
         """Is this ship at max halite capacity?"""
         return self.halite_amount >= constants.MAX_HALITE
+
+    @property
+    def must_stay(self):
+        return self.halite_amount < int(globals.game.game_map[self.position].halite_amount * 0.1)
+
+    @property
+    def should_return(self):
+        return ((self.halite_amount > constants.RETURN_AMOUNT) or
+            globals.game.game_map.calculate_distance(
+                self.position,
+                globals.closest_dropoff(self.position, enemy=True)
+            ) + 6 >= constants.MAX_TURNS - globals.game.turn_number
+        )
+
+    def find_best_move(self, game_map):
+        pass
 
     def make_dropoff(self):
         """Return a move to transform this ship into a dropoff."""
@@ -77,17 +113,33 @@ class Ship(Entity):
         """
         Don't move this ship.
         """
+        self.staying = True
         return "{} {} {}".format(commands.MOVE, self.id, commands.STAY_STILL)
 
     @staticmethod
     def _generate(player_id):
         """
         Creates an instance of a ship for a given player given the engine's input.
+        If an instance with the same ship.id has previously been generated, that instance will be returned.
         :param player_id: The id of the player who owns this ship
         :return: The ship id and ship object
         """
+        # Read game engine input
         ship_id, x_position, y_position, halite = map(int, read_input().split())
-        return ship_id, Ship(player_id, ship_id, Position(x_position, y_position), halite)
+
+        # Check storage to see if ship already exists
+        # If the ship exists, update its position and halite
+        if ship_id in Ship.__ships.keys():
+            old_ship = Ship.__ships[ship_id]
+            old_ship.position = Position(x_position, y_position)
+            old_ship.halite_amount = halite
+            old_ship._new_turn()
+            return ship_id, old_ship
+        else:
+            # Otherwise, create and return a new instance
+            new_ship = Ship(player_id, ship_id, Position(x_position, y_position), halite)
+            Ship.__ships[ship_id] = new_ship
+            return ship_id, new_ship
 
     def __repr__(self):
         return "{}(id={}, {}, cargo={} halite)".format(self.__class__.__name__,
