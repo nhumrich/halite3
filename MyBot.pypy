@@ -190,6 +190,10 @@ def run():
             highs.append(PP(total_so_far, Position(x,y)))"""
 
         enemy_locations = {ship.position for i in game.players for ship in game.players[i].get_ships() if game.players[i].id != game.my_id}
+        # for loc in enemy_locations:
+        #     if loc in destinations:
+        #         sp = destinations.pop(loc, None)
+        #         ships_des.pop(sp, None)
 
         """
         logging.info(sorted(highs, reverse=True)[:10])
@@ -316,7 +320,16 @@ def run():
                 ship.staying = True
                 move(ship.position, ship.position, ship, positions_used, command_queue)
 
+            # elif ship in ships_des:
+            #     # target_location = ships_des[ship]
+            #     # if ship.collect_amount * constants.STAY_FACTOR > game_map[p].halite_amount / (
+            #     #         game_map.calculate_distance(ship.position, p) * constants.DISTANCE_FACTOR + 1):
+            #     #     ship.dest = ship.position
+            #     # else:
+            #     ship.dest = ships_des[ship]
+            #     continue
             else:
+
                 logging.info(f'd {destinations}')
                 highest_so_far = ship.collect_amount * constants.STAY_FACTOR
                 best = ship.position
@@ -362,6 +375,8 @@ def run():
 
         for ship in ship_queue:
             if ship.dest:
+                # destinations[ship.dest] = ship
+                # ships_des[ship] = ship.dest
                 if ship.dest in dropoffs:
                     shortest = True
                 else:

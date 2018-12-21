@@ -249,20 +249,30 @@ def parse_constants(player_num, size):
         return result
 
 
-    RETURN_AMOUNT = get_constant('return_amount', 500, 1000)
-    # RETURN_AMOUNT = 930
-    LOOK_AMOUNT = get_constant('look_amount', 10, 1000)
-    SO_LOOK_AMOUNT = get_constant('so_look_amount', 2, 1000)
-    SHIP_DO_RATIO = get_constant('ship_do_ratio', 5, 30)
-    DO_DISTANCE = get_constant('do_distance', 1, 50)
-    DO_TURN_FACTOR = get_constant('do_turn_factor', 0.1, 1.0)
-    DO_HALITE_FACTOR = get_constant('do_halite_factor', 0.1, 0.9)
-    DISTANCE_FACTOR = get_constant('distance_factor', 0.1, 5.0)
-    STAY_FACTOR = get_constant('stay_factor', 0.1, 5.0)
+    # RETURN_AMOUNT = get_constant('return_amount', 500, 1000)
+    RETURN_AMOUNT = 950
+    # LOOK_AMOUNT = get_constant('look_amount', 10, 1000)
+    LOOK_AMOUNT = 300
+    # SO_LOOK_AMOUNT = get_constant('so_look_amount', 2, 1000)
+    SO_LOOK_AMOUNT = 100
+    # SHIP_DO_RATIO = get_constant('ship_do_ratio', 5, 30)
+    SHIP_DO_RATIO = 10
+    # DO_DISTANCE = get_constant('do_distance', 1, 50)
+    DO_DISTANCE = 16
+    # DO_TURN_FACTOR = get_constant('do_turn_factor', 0.1, 1.0)
+    DO_TURN_FACTOR = 0.7
+    # DO_HALITE_FACTOR = get_constant('do_halite_factor', 0.1, 0.9)
+    DO_HALITE_FACTOR = 0.6
+    # DISTANCE_FACTOR = get_constant('distance_factor', 0.1, 5.0)
+    DISTANCE_FACTOR = 1.5
+    # STAY_FACTOR = get_constant('stay_factor', 0.1, 5.0)
+    STAY_FACTOR = 3.7
     # ENEMY_FACTOR = get_constant('enemy_factor', 0.0, 3.0)
     ENEMY_FACTOR = 1
-    BUILD_FACTOR = get_constant('build_factor', 800, 4000)
-    BUILD_HALITE_LIMIT = get_constant('build_halite_limit', 0.1, 0.9)
+    # BUILD_FACTOR = get_constant('build_factor', 800, 4000)
+    BUILD_FACTOR = 2000
+    # BUILD_HALITE_LIMIT = get_constant('build_halite_limit', 0.1, 0.9)
+    BUILD_HALITE_LIMIT = 0.3
 
     if args.name:
         NAME = args.name
