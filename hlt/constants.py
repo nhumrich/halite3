@@ -20,7 +20,7 @@ NAME = None
 const_dict = {
     2: {
         32: {
-            'return_amount': 930,
+            'return_amount': 950,
             'look_amount': 225,
             'so_look_amount': 40,
             'ship_do_ratio': 10,
@@ -34,7 +34,7 @@ const_dict = {
             'build_halite_limit': 0.5
         },
         40: {
-            'return_amount': 930,
+            'return_amount': 950,
             'look_amount': 200,
             'so_look_amount': 50,
             'ship_do_ratio': 15,
@@ -48,46 +48,46 @@ const_dict = {
             'build_halite_limit': 0.4
         },
         48: {
-            'return_amount': 930,
-            'look_amount': 240,
-            'so_look_amount': 130,
-            'ship_do_ratio': 21,
-            'do_distance': 6,
+            'return_amount': 950,
+            'look_amount': 300,
+            'so_look_amount': 100,
+            'ship_do_ratio': 10,
+            'do_distance': 16,
             'do_turn_factor': 0.7,
-            'do_halite_factor': 0.3,
-            'distance_factor': 2.4,
-            'stay_factor': 4.5,
-            'enemy_factor': 1.0,
-            'build_factor': 2178,
-            'build_halite_limit': 0.4
-        },
-        56: {
-            'return_amount': 843,
-            'look_amount': 245,
-            'so_look_amount': 167,
-            'ship_do_ratio': 27,
-            'do_distance': 25,
-            'do_turn_factor': 0.7,
-            'do_halite_factor': 0.2,
-            'distance_factor': 1.8,
+            'do_halite_factor': 0.6,
+            'distance_factor': 1.5,
             'stay_factor': 3.7,
             'enemy_factor': 1.0,
-            'build_factor': 2180,
+            'build_factor': 2000,
+            'build_halite_limit': 0.3
+        },
+        56: {
+            'return_amount': 950,
+            'look_amount': 300,
+            'so_look_amount': 100,
+            'ship_do_ratio': 10,
+            'do_distance': 16,
+            'do_turn_factor': 0.7,
+            'do_halite_factor': 0.6,
+            'distance_factor': 1.5,
+            'stay_factor': 3.7,
+            'enemy_factor': 1.0,
+            'build_factor': 2000,
             'build_halite_limit': 0.3
         },
         64: {
-            'return_amount': 843,
-            'look_amount': 184,
-            'so_look_amount': 42,
-            'ship_do_ratio': 15,
+            'return_amount': 950,
+            'look_amount': 300,
+            'so_look_amount': 100,
+            'ship_do_ratio': 10,
             'do_distance': 16,
-            'do_turn_factor': 0.6,
-            'do_halite_factor': 0.1,
-            'distance_factor': 0.8,
-            'stay_factor': 3.9,
+            'do_turn_factor': 0.7,
+            'do_halite_factor': 0.6,
+            'distance_factor': 1.5,
+            'stay_factor': 3.7,
             'enemy_factor': 1.0,
-            'build_factor': 1168,
-            'build_halite_limit': 0.6
+            'build_factor': 2000,
+            'build_halite_limit': 0.3
         },
     },
     4: {
@@ -135,32 +135,32 @@ const_dict = {
             'build_halite_limit': 0.5
         },
         56: {
-            'return_amount': 843,
-            'look_amount': 245,
-            'so_look_amount': 167,
-            'ship_do_ratio': 27,
-            'do_distance': 25,
+            'return_amount': 950,
+            'look_amount': 300,
+            'so_look_amount': 100,
+            'ship_do_ratio': 10,
+            'do_distance': 16,
             'do_turn_factor': 0.7,
-            'do_halite_factor': 0.2,
-            'distance_factor': 1.8,
+            'do_halite_factor': 0.6,
+            'distance_factor': 1.5,
             'stay_factor': 3.7,
             'enemy_factor': 1.0,
-            'build_factor': 2180,
+            'build_factor': 2000,
             'build_halite_limit': 0.3
         },
         64: {
-            'return_amount': 843,
-            'look_amount': 184,
-            'so_look_amount': 42,
-            'ship_do_ratio': 15,
+            'return_amount': 950,
+            'look_amount': 300,
+            'so_look_amount': 100,
+            'ship_do_ratio': 10,
             'do_distance': 16,
-            'do_turn_factor': 0.6,
-            'do_halite_factor': 0.1,
-            'distance_factor': 0.8,
-            'stay_factor': 3.9,
+            'do_turn_factor': 0.7,
+            'do_halite_factor': 0.6,
+            'distance_factor': 1.5,
+            'stay_factor': 3.7,
             'enemy_factor': 1.0,
-            'build_factor': 1168,
-            'build_halite_limit': 0.6
+            'build_factor': 2000,
+            'build_halite_limit': 0.3
         },
     }
 }
@@ -248,31 +248,30 @@ def parse_constants(player_num, size):
         result = getattr(args, name) or const_dict[player_num][size].get(name)
         return result
 
-
-    # RETURN_AMOUNT = get_constant('return_amount', 500, 1000)
-    RETURN_AMOUNT = 950
+    RETURN_AMOUNT = get_constant('return_amount', 500, 1000)
+    # RETURN_AMOUNT = 950
     # LOOK_AMOUNT = get_constant('look_amount', 10, 1000)
     LOOK_AMOUNT = 300
-    # SO_LOOK_AMOUNT = get_constant('so_look_amount', 2, 1000)
-    SO_LOOK_AMOUNT = 100
-    # SHIP_DO_RATIO = get_constant('ship_do_ratio', 5, 30)
-    SHIP_DO_RATIO = 10
-    # DO_DISTANCE = get_constant('do_distance', 1, 50)
-    DO_DISTANCE = 16
-    # DO_TURN_FACTOR = get_constant('do_turn_factor', 0.1, 1.0)
-    DO_TURN_FACTOR = 0.7
-    # DO_HALITE_FACTOR = get_constant('do_halite_factor', 0.1, 0.9)
-    DO_HALITE_FACTOR = 0.6
-    # DISTANCE_FACTOR = get_constant('distance_factor', 0.1, 5.0)
-    DISTANCE_FACTOR = 1.5
-    # STAY_FACTOR = get_constant('stay_factor', 0.1, 5.0)
-    STAY_FACTOR = 3.7
-    # ENEMY_FACTOR = get_constant('enemy_factor', 0.0, 3.0)
-    ENEMY_FACTOR = 1
-    # BUILD_FACTOR = get_constant('build_factor', 800, 4000)
-    BUILD_FACTOR = 2000
-    # BUILD_HALITE_LIMIT = get_constant('build_halite_limit', 0.1, 0.9)
-    BUILD_HALITE_LIMIT = 0.3
+    SO_LOOK_AMOUNT = get_constant('so_look_amount', 2, 1000)
+    # SO_LOOK_AMOUNT = 100
+    SHIP_DO_RATIO = get_constant('ship_do_ratio', 5, 30)
+    # SHIP_DO_RATIO = 10
+    DO_DISTANCE = get_constant('do_distance', 1, 50)
+    # DO_DISTANCE = 16
+    DO_TURN_FACTOR = get_constant('do_turn_factor', 0.1, 1.0)
+    # DO_TURN_FACTOR = 0.7
+    DO_HALITE_FACTOR = get_constant('do_halite_factor', 0.1, 0.9)
+    # DO_HALITE_FACTOR = 0.6
+    DISTANCE_FACTOR = get_constant('distance_factor', 0.1, 5.0)
+    # DISTANCE_FACTOR = 1.5
+    STAY_FACTOR = get_constant('stay_factor', 0.1, 5.0)
+    # STAY_FACTOR = 3.7
+    ENEMY_FACTOR = get_constant('enemy_factor', 0.0, 3.0)
+    # ENEMY_FACTOR = 1
+    BUILD_FACTOR = get_constant('build_factor', 800, 4000)
+    # BUILD_FACTOR = 2000
+    BUILD_HALITE_LIMIT = get_constant('build_halite_limit', 0.1, 0.9)
+    # BUILD_HALITE_LIMIT = 0.3
 
     if args.name:
         NAME = args.name
