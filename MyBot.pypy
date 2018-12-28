@@ -5,11 +5,17 @@ import random
 import logging
 from copy import copy
 import itertools
+import sys
 # import numpy as np
 
 from hlt import constants
 from hlt.positionals import Direction, Position
 from hlt import globals, Game
+
+
+# sys.path.append('/opt/pycharm-professional/debug-eggs/pycharm-debug.egg')
+# import pydevd
+# pydevd.settrace('localhost', port=8989, stdoutToServer=True, stderrToServer=True)
 
 game = Game()
 globals.game = game
@@ -245,9 +251,10 @@ def run():
             #     s = destinations[ship.position]
             #     del ships_des[s]
             #     del destinations[ship.position]
-            if (constants.MAX_TURNS - game.turn_number) < 6 and ship.position in dropoffs:
+            if globals.endgame and ship.position in dropoffs:
                 # ignore ship completely so that it can die
                 ship.staying = True
+
             # should we build a drop-off?
             elif (len(ship_queue) >= constants.SHIP_DO_RATIO * len(dropoffs) and
                   ship.position in do_spots and
@@ -275,10 +282,10 @@ def run():
                 returning.add(ship.id)
                 ship.returning = True
 
-            elif (ship.halite_amount + ship.collect_amount > 1000):
+            # elif (ship.halite_amount + ship.collect_amount > 1000):
                 # its not worth staying on the square, just go home
-                ship.returning = True
-                returning.add(ship.id)
+                # ship.returning = True
+                # returning.add(ship.id)
 
         # mark enemy ships if we don't control more than half the ships on the board
 
@@ -290,7 +297,7 @@ def run():
                                                    closest_dropoff(pos)) > 1:
                         positions_used.add(location)
 
-        logging.info(enemy_locations)
+        # logging.info(enemy_locations)
 
         for ship in ship_queue:
             if ship.position in dropoffs:
@@ -300,25 +307,21 @@ def run():
                 # move to drop-off
                 # logging.info('move to dropoff')
                 ship.returning = True
-                if constants.MAX_TURNS - game.turn_number <= 10:
-                    collide = True
-                else:
-                    collide = False
 
                 d = ships_des.pop(ship.id, None)
                 destinations.pop(d, None)
 
-                move(closest_dropoff(ship.position), ship.position, ship, positions_used,
-                     command_queue, collide=collide, shortest=True)
+                ship.dest = closest_dropoff(ship.position)
 
         remaining_ships = [ship for ship in ship_queue if not ship.returning and not ship.staying]
         while len(remaining_ships) > 0:
             ship = remaining_ships.pop(0)
-            if (ship.halite_amount + ship.collect_amount >
-                  constants.RETURN_AMOUNT):
+            # if (ship.halite_amount + ship.collect_amount >
+            #       constants.RETURN_AMOUNT):
+            if False:
                 # will staying make me cross over the line?
-                ship.staying = True
-                move(ship.position, ship.position, ship, positions_used, command_queue)
+                # ship.staying = True
+                globals.move(ship.position, ship.position, ship, positions_used, command_queue)
 
             # elif ship in ships_des:
             #     # target_location = ships_des[ship]
@@ -329,10 +332,14 @@ def run():
             #     ship.dest = ships_des[ship]
             #     continue
             else:
+                if ship.id == 3 and 17 < cur_turn < 22:
+                    pass
 
-                logging.info(f'd {destinations}')
+                # logging.info(f'd {destinations}')
+                ranks = {}
                 highest_so_far = ship.collect_amount * constants.STAY_FACTOR
                 best = ship.position
+                ranks[best] = highest_so_far
                 if ship.id in ships_des:
                     p = ships_des[ship.id]  # where I was going
                     w = game_map[p].halite_amount / (
@@ -341,6 +348,7 @@ def run():
                         w *= constants.ENEMY_FACTOR
                     if w > highest_so_far:
                         best = p
+                    ranks[p] = w
                 else:
                     for p in highs:
                         # p = game_map.normalize(p)
@@ -360,9 +368,12 @@ def run():
                                           * constants.DISTANCE_FACTOR + 1)
                         if weighted > highest_so_far:
                             best = p
+                            highest_so_far = weighted
+                        ranks[p] = weighted
 
                 p = best
-                logging.info(f'Ship {ship.id} moving to position {p}')
+                if 10 < cur_turn < 30:
+                    logging.info(f'Ship {ship.id} moving to position {p} with ranks: {ranks}')
 
                 if p in destinations:
                     # we bumped someone
@@ -371,7 +382,16 @@ def run():
                 else:
                     destinations[p] = ship
 
-                ship.dest = p
+                w = game_map[p].halite_amount / (
+                        game_map.calculate_distance(ship.position,
+                                                    p) * constants.DISTANCE_FACTOR + 1)
+                logging.info(f'ship {ship.id} wanting to go to {p} with w:{w}')
+
+                if p == ship.position:
+                    globals.move(p, ship.position, ship, positions_used, command_queue)
+                    ship.dest = None
+                else:
+                    ship.dest = p
 
         for ship in ship_queue:
             if ship.dest:
@@ -381,9 +401,8 @@ def run():
                     shortest = True
                 else:
                     shortest = False
-                move(ship.dest, ship.position, ship, positions_used, command_queue,
-                     shortest=shortest)
-
+                globals.move(ship.dest, ship.position, ship, positions_used, command_queue,
+                             shortest=shortest)
 
         halite_collected = me.halite_amount + spent_so_far - 5000
         ship_turns = 0
@@ -411,7 +430,7 @@ def run():
             positions_used.add(syp)
             command_queue.append(me.shipyard.spawn())
             # Send your moves back to the game environment, ending this turn.
-        logging.info(command_queue)
+        # logging.info(command_queue)
         game.end_turn(command_queue)
 
 

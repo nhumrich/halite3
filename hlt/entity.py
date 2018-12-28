@@ -85,12 +85,12 @@ class Ship(Entity):
 
     @property
     def should_return(self):
-        return ((self.halite_amount > constants.RETURN_AMOUNT) or
-            globals.game.game_map.calculate_distance(
+        if globals.game.game_map.calculate_distance(
                 self.position,
                 globals.closest_dropoff(self.position, enemy=True)
-            ) + 6 >= constants.MAX_TURNS - globals.game.turn_number
-        )
+        ) + 4 >= constants.MAX_TURNS - globals.game.turn_number:
+            globals.endgame = True
+        return (self.halite_amount > constants.RETURN_AMOUNT) or globals.endgame
 
     def find_best_move(self, game_map):
         pass

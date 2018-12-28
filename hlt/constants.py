@@ -34,18 +34,18 @@ const_dict = {
             'build_halite_limit': 0.5
         },
         40: {
-            'return_amount': 950,
-            'look_amount': 200,
-            'so_look_amount': 50,
-            'ship_do_ratio': 15,
-            'do_distance': 15,
+            'return_amount': 850,
+            'look_amount': 300,
+            'so_look_amount': 100,
+            'ship_do_ratio': 10,
+            'do_distance': 16,
             'do_turn_factor': 0.4,
-            'do_halite_factor': 0.5,
-            'distance_factor': 1.0,
-            'stay_factor': 4.0,
+            'do_halite_factor': 0.4,
+            'distance_factor': 1.5,
+            'stay_factor': 3.7,
             'enemy_factor': 1.0,
-            'build_factor': 1800,
-            'build_halite_limit': 0.4
+            'build_factor': 1933,
+            'build_halite_limit': 0.5
         },
         48: {
             'return_amount': 950,
@@ -92,7 +92,7 @@ const_dict = {
     },
     4: {
         32: {
-            'return_amount': 930,
+            'return_amount': 870,
             'look_amount': 200,
             'so_look_amount': 50,
             'ship_do_ratio': 26,
@@ -108,7 +108,7 @@ const_dict = {
         },
         40: {
             'return_amount': 930,
-            'look_amount': 222,
+            'look_amount': 300,
             'so_look_amount': 170,
             'ship_do_ratio': 18,
             'do_distance': 13,
@@ -121,8 +121,8 @@ const_dict = {
             'build_halite_limit': 0.2
         },
         48: {
-            'return_amount': 930,
-            'look_amount': 226,
+            'return_amount': 840,
+            'look_amount': 300,
             'so_look_amount': 50,
             'ship_do_ratio': 5,
             'do_distance': 23,
@@ -135,7 +135,7 @@ const_dict = {
             'build_halite_limit': 0.5
         },
         56: {
-            'return_amount': 950,
+            'return_amount': 820,
             'look_amount': 300,
             'so_look_amount': 100,
             'ship_do_ratio': 10,
@@ -149,7 +149,7 @@ const_dict = {
             'build_halite_limit': 0.3
         },
         64: {
-            'return_amount': 950,
+            'return_amount': 840,
             'look_amount': 300,
             'so_look_amount': 100,
             'ship_do_ratio': 10,
@@ -250,8 +250,8 @@ def parse_constants(player_num, size):
 
     RETURN_AMOUNT = get_constant('return_amount', 500, 1000)
     # RETURN_AMOUNT = 950
-    # LOOK_AMOUNT = get_constant('look_amount', 10, 1000)
-    LOOK_AMOUNT = 300
+    LOOK_AMOUNT = get_constant('look_amount', 10, 1000)
+    # LOOK_AMOUNT = 300
     SO_LOOK_AMOUNT = get_constant('so_look_amount', 2, 1000)
     # SO_LOOK_AMOUNT = 100
     SHIP_DO_RATIO = get_constant('ship_do_ratio', 5, 30)
