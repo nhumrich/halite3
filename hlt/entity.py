@@ -87,7 +87,7 @@ class Ship(Entity):
     def should_return(self):
         if globals.game.game_map.calculate_distance(
                 self.position,
-                globals.closest_dropoff(self.position, enemy=True)
+                globals.closest_dropoff(self.position, enemy=False)
         ) + 4 >= constants.MAX_TURNS - globals.game.turn_number:
             globals.endgame = True
         return (self.halite_amount > constants.RETURN_AMOUNT) or globals.endgame

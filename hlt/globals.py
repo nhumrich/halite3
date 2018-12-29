@@ -30,10 +30,11 @@ def closest_dropoff(position, enemy=False):
 def move(target, source, ship, positions_used, command_queue, collide=False, shortest=False):
 
     collide = collide or endgame
-    num, amount, direc = calculate_real_distance(
+    num, amount, direcs = calculate_real_distance(
         target, source, positions_used, ship.halite_amount, collide=collide)
 
-
+    logging.info(direcs)
+    direc, *rest = direcs
     po = game.game_map.normalize(ship.position.directional_offset(direc))
     # logging.info(f'Moving {ship.id} at {ship.position} to {po}')
     positions_used.add(po)
@@ -44,7 +45,7 @@ def calculate_real_distance(target, source, positions, amount, collide=False, tu
     # if turn == 1:
     source = game.game_map.normalize(source)
     if turn == 15:
-        return 0, amount, (0, 0)
+        return 0, amount, [(0, 0)]
 
     if game.turn_number == 36:
         pass
@@ -54,12 +55,12 @@ def calculate_real_distance(target, source, positions, amount, collide=False, tu
         if collide and source in dropoffs:
             pass
         elif source in positions:
-            return -1, -1, (0, 0)
+            return -1, -1, [(0, 0)]
 
     if target == source:
         if turn == 0:
             logging.info('hit')
-        return 0, amount, (0, 0)
+        return 0, amount, [(0, 0)]
 
     stay_moves = 0
     cost_of_move = game.game_map[source].halite_amount * 0.1
@@ -68,7 +69,7 @@ def calculate_real_distance(target, source, positions, amount, collide=False, tu
         stay_moves += 1
         collected = math.ceil(game.game_map[source].halite_amount * 0.25)
         spot_new = game.game_map[source].halite_amount - collected
-        amount = amount + collected - int(spot_new * 0.1)
+        amount = min(amount + collected, 1000) - int(spot_new * 0.1)
         stayed = True
 
     else:
@@ -77,16 +78,17 @@ def calculate_real_distance(target, source, positions, amount, collide=False, tu
 
     def calc_move(d, cur_best):
         new_pos = source.directional_offset(d)
-        num_moves, new_amount, direc = calculate_real_distance(
+        num_moves, new_amount, direcs = calculate_real_distance(
             target, new_pos, positions, amount, collide=collide, turn=turn+1)
 
+        # logging.info(f'target {target} to source {source}: {}')
         if num_moves == -1:
             return cur_best
 
         # if (num_moves < cur_best[0] or
         #         (num_moves == cur_best[0] and amount > cur_best[1])):
         if new_amount > cur_best[1]:
-            return num_moves, amount, d
+            return num_moves, new_amount, [d] + direcs
 
         return cur_best
 
@@ -134,13 +136,13 @@ def calculate_real_distance(target, source, positions, amount, collide=False, tu
             cur_best = calc_move(d, cur_best)
 
     if cur_best[0] == -1:
-        return -1, -1, (0,0)
+        return -1, -1, [(0,0)]
 
     # now calc out own move
-    num_moves, new_amount, direc = cur_best
+    num_moves, new_amount, direcs = cur_best
     if stayed:
-        direc = (0,0)
+        direcs = [(0,0)] + direcs
 
     num_moves += 1 + stay_moves
 
-    return num_moves, new_amount, direc
+    return num_moves, new_amount, direcs
