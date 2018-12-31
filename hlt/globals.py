@@ -44,7 +44,7 @@ def move(target, source, ship, positions_used, command_queue, collide=False, sho
 def calculate_real_distance(target, source, positions, amount, collide=False, turn=0):
     # if turn == 1:
     source = game.game_map.normalize(source)
-    if turn == 15:
+    if turn == 13:
         return 0, amount, [(0, 0)]
 
     if game.turn_number == 36:
@@ -57,7 +57,7 @@ def calculate_real_distance(target, source, positions, amount, collide=False, tu
         elif source in positions:
             return -1, -1, [(0, 0)]
 
-    if target == source:
+    if target == source and turn != 0:
         if turn == 0:
             logging.info('hit')
         return 0, amount, [(0, 0)]

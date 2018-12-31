@@ -114,7 +114,7 @@ class Bot:
 
 
 def do_round(bots: List[Bot]):
-    run_string = ['./halite', '--replay-directory', 'replays/', '--width', '48', '--height', '48',
+    run_string = ['./halite', '--replay-directory', 'replays/', '--width', '40', '--height', '40',
                   '--results-as-json']
 
     scores = defaultdict(lambda: 0)
@@ -128,7 +128,7 @@ def do_round(bots: List[Bot]):
             bot_strings = []
 
             for n in [a, b]:
-                bot_strings.append('python run.py ' + n.get_string())
+                bot_strings.append('python MyBot.pypy ' + n.get_string())
 
             processes.append((a, b, subprocess.Popen(run_string + bot_strings,
                                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)))

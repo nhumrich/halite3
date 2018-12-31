@@ -316,11 +316,10 @@ def run():
         remaining_ships = [ship for ship in ship_queue if not ship.returning and not ship.staying]
         while len(remaining_ships) > 0:
             ship = remaining_ships.pop(0)
-            # if (ship.halite_amount + ship.collect_amount >
-            #       constants.RETURN_AMOUNT):
-            if False:
+            if (ship.halite_amount + ship.collect_amount >
+                  constants.RETURN_AMOUNT):
                 # will staying make me cross over the line?
-                # ship.staying = True
+                ship.staying = True
                 globals.move(ship.position, ship.position, ship, positions_used, command_queue)
 
             # elif ship in ships_des:
