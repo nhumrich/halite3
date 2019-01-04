@@ -1,6 +1,9 @@
+import itertools
+
 import abc
 
 import math
+import logging
 
 from . import commands, constants
 from .positionals import Direction, Position
@@ -94,6 +97,48 @@ class Ship(Entity):
 
     def find_best_move(self, game_map):
         pass
+
+    def do_inspired_move(self, enemy_locations, positions_used):
+        # logging.info(f'trying inspired on ship: {self}')
+        local_enemies = []
+        map = {}
+        # logging.info(f'enemies: {enemy_locations}')
+        for x, y in itertools.product(range(-4, 5), range(-4, 5)):
+            if self.position.directional_offset((x, y)) in enemy_locations:
+                local_enemies.append(self.position.directional_offset((x, y)))
+
+        # logging.info(f'local: {local_enemies}')
+
+        for x, y in itertools.product(range(-1, 2), range(-1, 2)):
+            p = self.position.directional_offset((x, y))
+            minimum = 10
+            for e in local_enemies:
+                dist = globals.game.game_map.calculate_distance(p, e)
+                if dist < minimum:
+                    minimum = dist
+            map[(x, y)] = minimum
+
+        # logging.info(f'insp {map[(0,0)]}')
+        if map[(0, 0)] in (2, 3) and \
+                globals.game.game_map[self.position].halite_amount >= 50:
+            return self.position
+
+        else:
+            best_so_far = globals.game.game_map[self.position].halite_amount
+            new_pos = self.position
+            for x, y in itertools.product(range(-1, 2), range(-1, 2)):
+                if x == 0 and y == 0:
+                    continue
+                if (map[(x, y)] in (2, 3) and
+                        self.position.directional_offset((x, y)) not in positions_used):
+                    # logging.info(f'inspired {self} going to {(x,y)}')
+                    pos = self.position.directional_offset((x, y))
+                    if globals.game.game_map[pos].halite_amount > best_so_far:
+                        best_so_far = globals.game.game_map[pos].halite_amount
+                        new_pos = pos
+
+        # logging.info(f'inspired {self} found nowhere')
+        return new_pos
 
     def make_dropoff(self):
         """Return a move to transform this ship into a dropoff."""

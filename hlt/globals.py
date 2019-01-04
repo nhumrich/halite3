@@ -7,6 +7,8 @@ game = None
 dropoffs = []
 endgame = False
 
+claimed_moves = {}
+
 
 def closest_dropoff(position, enemy=False):
     min_so_far = 5000
@@ -27,28 +29,35 @@ def closest_dropoff(position, enemy=False):
     return closest_so_far
 
 
-def move(target, source, ship, positions_used, command_queue, collide=False, shortest=False):
+def move(target, source, ship, positions_used, command_queue, collide=False, shortest=False, la=13):
+
+    for i in range(1, 15):
+        if game.turn_number + i not in claimed_moves:
+            claimed_moves[game.turn_number + i] = {}
 
     collide = collide or endgame
     num, amount, direcs = calculate_real_distance(
-        target, source, positions_used, ship.halite_amount, collide=collide)
+        target, source, positions_used, ship.halite_amount, ship, collide=collide, la=la)
 
-    logging.info(direcs)
+    # logging.info(direcs)
     direc, *rest = direcs
     po = game.game_map.normalize(ship.position.directional_offset(direc))
     # logging.info(f'Moving {ship.id} at {ship.position} to {po}')
     positions_used.add(po)
+    prev_po = po
+    # logging.info(len(direcs))
+    for i, d in enumerate(direcs[:6]):
+        new_po = game.game_map.normalize(prev_po.directional_offset(direcs[0]))
+        claimed_moves[game.turn_number + i + 1][new_po] = ship.id
+        prev_po = new_po
     command_queue.append(ship.move(direc))
 
 
-def calculate_real_distance(target, source, positions, amount, collide=False, turn=0):
+def calculate_real_distance(target, source, positions, amount, ship, collide=False, turn=0, la=13):
     # if turn == 1:
     source = game.game_map.normalize(source)
-    if turn == 13:
-        return 0, amount, [(0, 0)]
-
-    if game.turn_number == 36:
-        pass
+    if turn == la:
+        return 1, amount, [(0, 0)]
 
     if turn == 1:
         # logging.info(f'zz: {target}, {source}, {positions}, {amount}, {turn}')
@@ -57,10 +66,15 @@ def calculate_real_distance(target, source, positions, amount, collide=False, tu
         elif source in positions:
             return -1, -1, [(0, 0)]
 
+    if turn in (2, 3, 4):
+        ship_id = claimed_moves[game.turn_number + 1].get(source)
+        if ship_id and ship_id != ship.id:
+            return -1, -1, [(0,0)]
+
     if target == source and turn != 0:
         if turn == 0:
             logging.info('hit')
-        return 0, amount, [(0, 0)]
+        return 1, amount, [(0, 0)]
 
     stay_moves = 0
     cost_of_move = game.game_map[source].halite_amount * 0.1
@@ -79,15 +93,18 @@ def calculate_real_distance(target, source, positions, amount, collide=False, tu
     def calc_move(d, cur_best):
         new_pos = source.directional_offset(d)
         num_moves, new_amount, direcs = calculate_real_distance(
-            target, new_pos, positions, amount, collide=collide, turn=turn+1)
+            target, new_pos, positions, amount, ship, collide=collide, turn=turn+1, la=la)
 
+        if d == (0,0):
+            collected = math.ceil(game.game_map[new_pos].halite_amount * 0.25)
+            new_amount = min(new_amount + collected, 1000)
         # logging.info(f'target {target} to source {source}: {}')
         if num_moves == -1:
             return cur_best
 
         # if (num_moves < cur_best[0] or
         #         (num_moves == cur_best[0] and amount > cur_best[1])):
-        if new_amount > cur_best[1]:
+        if new_amount > cur_best[1] or (new_amount == cur_best[1] and num_moves < cur_best[0]):
             return num_moves, new_amount, [d] + direcs
 
         return cur_best
@@ -98,7 +115,12 @@ def calculate_real_distance(target, source, positions, amount, collide=False, tu
     fallback = set()
 
     moves = game.game_map.get_unsafe_moves(source, target)
-    if len(moves) == 1:
+    if target == source:
+        assert len(moves) == 0
+        ideal.add((0, 0))
+        all_possible.discard((0, 0))
+        fallback = all_possible
+    elif len(moves) == 1:
         # try move first
         direction = moves[0]
         ideal.add(direction)

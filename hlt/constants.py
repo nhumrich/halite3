@@ -121,9 +121,9 @@ const_dict = {
             'build_halite_limit': 0.2
         },
         48: {
-            'return_amount': 840,
+            'return_amount': 890,
             'look_amount': 300,
-            'so_look_amount': 50,
+            'so_look_amount': 80,
             'ship_do_ratio': 5,
             'do_distance': 23,
             'do_turn_factor': 0.6,
@@ -135,7 +135,7 @@ const_dict = {
             'build_halite_limit': 0.5
         },
         56: {
-            'return_amount': 820,
+            'return_amount': 890,
             'look_amount': 300,
             'so_look_amount': 100,
             'ship_do_ratio': 10,
@@ -149,9 +149,9 @@ const_dict = {
             'build_halite_limit': 0.3
         },
         64: {
-            'return_amount': 840,
+            'return_amount': 890,
             'look_amount': 300,
-            'so_look_amount': 100,
+            'so_look_amount': 80,
             'ship_do_ratio': 10,
             'do_distance': 16,
             'do_turn_factor': 0.7,

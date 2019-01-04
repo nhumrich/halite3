@@ -63,62 +63,6 @@ def find_best_path_to_target():
         pass
 
 
-def move(target, source, ship, positions_used, command_queue, collide=False, shortest=False):
-    # logging.info(f'moving to {target} from {source}')
-
-    def doit(pos):
-        po = game.game_map.normalize(ship.position.directional_offset(pos))
-        # logging.info(f'testing {d}')
-        if (collide and po in dropoffs) or po not in positions_used:
-            # logging.info(f'ship {ship.id} on {source} next move on {po}')
-            positions_used.add(po)
-            command_queue.append(ship.move(pos))
-            # logging.info(command_queue)
-            return True
-        return False
-
-    all_possible = {(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)}
-    moves = game.game_map.get_unsafe_moves(source, target)
-    if target == source:
-        # stay where we are
-        if doit((0, 0)):
-            return
-
-    # find cheapest path
-    # if shortest:
-    #     moves = sorted(moves, key=lambda x: astar(source.directional_offset(x), target),
-    #                reverse=not shortest)
-
-    if len(moves) >= 2:
-        # sort by cost
-        moves = sorted(moves,
-                       key=lambda x: game.game_map[
-                           ship.position.directional_offset(x)].halite_amount,
-                       reverse=not shortest)
-
-    for d in moves:
-        if doit(d):
-            return
-        all_possible.remove(d)
-
-    # if (0, 0) in all_possible:
-    #     # try staying put first
-    #     if doit((0, 0)):
-    #         return
-    #
-    #     all_possible.remove((0, 0))
-
-    while all_possible:
-        d = random.sample(all_possible, 1)[0]
-        # d = all_possible.pop()
-        if doit(d):
-            return
-        all_possible.remove(d)
-
-    # welp, we crash
-    # logging.info(f'{ship.id} crash')
-
-
 def closest_dropoff(position):
     min_so_far = 5000
     closest_so_far = None
@@ -317,10 +261,18 @@ def run():
         while len(remaining_ships) > 0:
             ship = remaining_ships.pop(0)
             if (ship.halite_amount + ship.collect_amount >
-                  constants.RETURN_AMOUNT):
+                    constants.RETURN_AMOUNT):
                 # will staying make me cross over the line?
                 ship.staying = True
                 globals.move(ship.position, ship.position, ship, positions_used, command_queue)
+                continue
+            if num_players == 4 and ship.inspired:
+                pos = ship.do_inspired_move(enemy_locations, positions_used)
+                if pos is not None:
+                    logging.info('bam')
+                    globals.move(pos, ship.position, ship, positions_used, command_queue, la=4)
+                    ship.staying = True
+                    continue
 
             # elif ship in ships_des:
             #     # target_location = ships_des[ship]
@@ -330,67 +282,66 @@ def run():
             #     # else:
             #     ship.dest = ships_des[ship]
             #     continue
-            else:
-                if ship.id == 3 and 17 < cur_turn < 22:
-                    pass
+            if ship.id == 3 and 17 < cur_turn < 22:
+                pass
 
-                # logging.info(f'd {destinations}')
-                ranks = {}
-                highest_so_far = ship.collect_amount * constants.STAY_FACTOR
-                best = ship.position
-                ranks[best] = highest_so_far
-                if ship.id in ships_des:
-                    p = ships_des[ship.id]  # where I was going
-                    w = game_map[p].halite_amount / (
-                            game_map.calculate_distance(ship.position, p) * constants.DISTANCE_FACTOR + 1)
-                    if p in enemy_locations:
-                        w *= constants.ENEMY_FACTOR
-                    if w > highest_so_far:
-                        best = p
-                    ranks[p] = w
-                else:
-                    for p in highs:
-                        # p = game_map.normalize(p)
-                        if p in destinations:
-                            old_ship = destinations[p]
-                            old_distance = game_map.calculate_distance(old_ship.position, p)
-                            new_distance = game_map.calculate_distance(ship.position, p)
-                            if new_distance >= old_distance:
-                                # target is now mine, closest person gets it
-                                continue
-                        hal = game_map[p].halite_amount
-
-                        if p in dropoffs:
-                            hal = ship.halite_amount
-
-                        weighted = hal / (game_map.calculate_distance(ship.position, p)
-                                          * constants.DISTANCE_FACTOR + 1)
-                        if weighted > highest_so_far:
-                            best = p
-                            highest_so_far = weighted
-                        ranks[p] = weighted
-
-                p = best
-                if 10 < cur_turn < 30:
-                    logging.info(f'Ship {ship.id} moving to position {p} with ranks: {ranks}')
-
-                if p in destinations:
-                    # we bumped someone
-                    destinations[p], old = ship, destinations[p]
-                    remaining_ships.append(old)
-                else:
-                    destinations[p] = ship
-
+            # logging.info(f'd {destinations}')
+            ranks = {}
+            highest_so_far = ship.collect_amount * constants.STAY_FACTOR
+            best = ship.position
+            ranks[best] = highest_so_far
+            if ship.id in ships_des:
+                p = ships_des[ship.id]  # where I was going
                 w = game_map[p].halite_amount / (
-                        game_map.calculate_distance(ship.position,
-                                                    p) * constants.DISTANCE_FACTOR + 1)
-                logging.info(f'ship {ship.id} wanting to go to {p} with w:{w}')
+                        game_map.calculate_distance(ship.position, p) * constants.DISTANCE_FACTOR + 1)
+                if p in enemy_locations:
+                    w *= constants.ENEMY_FACTOR
+                if w > highest_so_far:
+                    best = p
+                ranks[p] = w
+            else:
+                for p in highs:
+                    # p = game_map.normalize(p)
+                    if p in destinations:
+                        old_ship = destinations[p]
+                        old_distance = game_map.calculate_distance(old_ship.position, p)
+                        new_distance = game_map.calculate_distance(ship.position, p)
+                        if new_distance >= old_distance:
+                            # target is now mine, closest person gets it
+                            continue
+                    hal = game_map[p].halite_amount
 
-                if p == ship.position:
-                    globals.move(p, ship.position, ship, positions_used, command_queue)
-                    ship.dest = None
-                else:
-                    ship.dest = p
+                    if p in dropoffs:
+                        hal = ship.halite_amount
+
+                    weighted = hal / (game_map.calculate_distance(ship.position, p)
+                                      * constants.DISTANCE_FACTOR + 1)
+                    if weighted > highest_so_far:
+                        best = p
+                        highest_so_far = weighted
+                    ranks[p] = weighted
+
+            p = best
+            if 10 < cur_turn < 30:
+                logging.info(f'Ship {ship.id} moving to position {p} with ranks: {ranks}')
+
+            if p in destinations:
+                # we bumped someone
+                destinations[p], old = ship, destinations[p]
+                remaining_ships.append(old)
+            else:
+                destinations[p] = ship
+
+            w = game_map[p].halite_amount / (
+                    game_map.calculate_distance(ship.position,
+                                                p) * constants.DISTANCE_FACTOR + 1)
+            # logging.info(f'ship {ship.id} wanting to go to {p} with w:{w}')
+
+            if p == ship.position:
+                globals.move(p, ship.position, ship, positions_used, command_queue)
+                ship.dest = None
+            else:
+                ship.dest = p
 
         for ship in ship_queue:
             if ship.dest:
