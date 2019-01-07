@@ -46,7 +46,7 @@ def move(target, source, ship, positions_used, command_queue, collide=False, sho
     positions_used.add(po)
     prev_po = po
     # logging.info(len(direcs))
-    for i, d in enumerate(direcs[:6]):
+    for i, d in enumerate(direcs[:1]):
         new_po = game.game_map.normalize(prev_po.directional_offset(direcs[0]))
         claimed_moves[game.turn_number + i + 1][new_po] = ship.id
         prev_po = new_po

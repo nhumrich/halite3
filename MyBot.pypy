@@ -119,10 +119,11 @@ def run():
         # astar_cache.clear()
         highs = []
         # spots = PriorityQueue()
+        """"""
         for x, y in itertools.product(range(game_map.width), range(game_map.height)):
             highs.append(Position(x, y))
         """
-                for x, y in itertools.product(range(game_map.width), range(game_map.height)):
+        for x, y in itertools.product(range(game_map.width), range(game_map.height)):
             total_so_far = 0
             current_p = Position(x, y)
             for x1, y2 in itertools.product(range(-4, 5), range(-4, 5)):
@@ -137,18 +138,19 @@ def run():
                 else:
                     total_so_far += 255 * math.sqrt(spot_amount / 2048)
                     # total_so_far += spot_amount
-            highs.append(PP(total_so_far, Position(x,y)))"""
-
+            highs.append(PP(total_so_far, Position(x,y)))
+        """
         enemy_locations = {ship.position for i in game.players for ship in game.players[i].get_ships() if game.players[i].id != game.my_id}
         # for loc in enemy_locations:
         #     if loc in destinations:
         #         sp = destinations.pop(loc, None)
         #         ships_des.pop(sp, None)
 
-        """
-        logging.info(sorted(highs, reverse=True)[:10])
-        highs = [pp.position for pp in sorted(highs, reverse=True)[:constants.LOOK_AMOUNT]]
-        logging.info(highs[:10])"""
+
+        # logging.info(sorted(highs, reverse=True)[:10])
+        # highs = [pp.position for pp in sorted(highs, reverse=True)[:constants.LOOK_AMOUNT]]
+        # logging.info(highs[:10])
+
         highs = sorted(highs, key=lambda p: game_map[p].halite_amount, reverse=True)[:constants.LOOK_AMOUNT]
         do_spots = highs[:constants.SO_LOOK_AMOUNT]
         positions_used = set()
@@ -266,13 +268,13 @@ def run():
                 ship.staying = True
                 globals.move(ship.position, ship.position, ship, positions_used, command_queue)
                 continue
-            if num_players == 4 and ship.inspired:
-                pos = ship.do_inspired_move(enemy_locations, positions_used)
-                if pos is not None:
-                    logging.info('bam')
-                    globals.move(pos, ship.position, ship, positions_used, command_queue, la=4)
-                    ship.staying = True
-                    continue
+            # if num_players == 4 and ship.inspired:
+            #     pos = ship.do_inspired_move(enemy_locations, positions_used)
+            #     if pos is not None:
+            #         logging.info('bam')
+            #         globals.move(pos, ship.position, ship, positions_used, command_queue, la=4)
+            #         ship.staying = True
+            #         continue
 
             # elif ship in ships_des:
             #     # target_location = ships_des[ship]
