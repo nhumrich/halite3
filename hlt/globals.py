@@ -29,7 +29,8 @@ def closest_dropoff(position, enemy=False):
     return closest_so_far
 
 
-def move(target, source, ship, positions_used, command_queue, collide=False, shortest=False, la=13):
+def move(target, source, ship, positions_used, enemy_locations,
+         command_queue, collide=False, shortest=False, la=13):
 
     for i in range(1, 15):
         if game.turn_number + i not in claimed_moves:
@@ -37,7 +38,8 @@ def move(target, source, ship, positions_used, command_queue, collide=False, sho
 
     collide = collide or endgame
     num, amount, direcs = calculate_real_distance(
-        target, source, positions_used, ship.halite_amount, ship, collide=collide, la=la)
+        target, source, positions_used, enemy_locations,
+        ship.halite_amount, ship, collide=collide, la=la)
 
     # logging.info(direcs)
     direc, *rest = direcs
@@ -53,7 +55,9 @@ def move(target, source, ship, positions_used, command_queue, collide=False, sho
     command_queue.append(ship.move(direc))
 
 
-def calculate_real_distance(target, source, positions, amount, ship, collide=False, turn=0, la=13):
+def calculate_real_distance(target, source, positions,
+                            enemy_locations, amount, ship,
+                            collide=False, turn=0, la=13):
     # if turn == 1:
     source = game.game_map.normalize(source)
     if turn == la:
@@ -64,12 +68,14 @@ def calculate_real_distance(target, source, positions, amount, ship, collide=Fal
         if collide and source in dropoffs:
             pass
         elif source in positions:
+            return -5, -5, [(0, 0)]
+        elif source in enemy_locations:
             return -1, -1, [(0, 0)]
 
     if turn in (2, 3, 4):
         ship_id = claimed_moves[game.turn_number + 1].get(source)
         if ship_id and ship_id != ship.id:
-            return -1, -1, [(0,0)]
+            return -2, -2, [(0,0)]
 
     if target == source and turn != 0:
         if turn == 0:
@@ -93,18 +99,20 @@ def calculate_real_distance(target, source, positions, amount, ship, collide=Fal
     def calc_move(d, cur_best):
         new_pos = source.directional_offset(d)
         num_moves, new_amount, direcs = calculate_real_distance(
-            target, new_pos, positions, amount, ship, collide=collide, turn=turn+1, la=la)
+            target, new_pos, positions, enemy_locations, amount, ship, collide=collide, turn=turn+1, la=la)
 
+        if turn == 0 and ship.id == 14:
+            logging.info(f'{num_moves} : {new_amount} : {direcs}')
         if d == (0,0):
             collected = math.ceil(game.game_map[new_pos].halite_amount * 0.25)
             new_amount = min(new_amount + collected, 1000)
         # logging.info(f'target {target} to source {source}: {}')
-        if num_moves == -1:
+        if num_moves <= -5:
             return cur_best
 
         # if (num_moves < cur_best[0] or
         #         (num_moves == cur_best[0] and amount > cur_best[1])):
-        if new_amount > cur_best[1] or (new_amount == cur_best[1] and num_moves < cur_best[0]):
+        if (new_amount > cur_best[1]) or (new_amount == cur_best[1] and num_moves < cur_best[0]):
             return num_moves, new_amount, [d] + direcs
 
         return cur_best

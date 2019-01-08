@@ -151,15 +151,15 @@ const_dict = {
         64: {
             'return_amount': 930,
             'look_amount': 300,
-            'so_look_amount': 150,
+            'so_look_amount': 80,
             'ship_do_ratio': 10,
             'do_distance': 16,
             'do_turn_factor': 0.7,
             'do_halite_factor': 0.6,
-            'distance_factor': 1.4,
-            'stay_factor': 3.6,
+            'distance_factor': 1.5,
+            'stay_factor': 3.7,
             'enemy_factor': 1.0,
-            'build_factor': 2000,
+            'build_factor': 2200,
             'build_halite_limit': 0.3
         },
     }

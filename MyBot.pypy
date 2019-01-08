@@ -235,13 +235,15 @@ def run():
 
         # mark enemy ships if we don't control more than half the ships on the board
 
-        if len(ship_queue) < len(enemy_locations):
-            for pos in enemy_locations:
-                for d in Direction.get_all_cardinals() + [(0,0)]:
-                    location = game_map.normalize(pos.directional_offset(d))
-                    if game_map.calculate_distance(location,
-                                                   closest_dropoff(pos)) > 1:
-                        positions_used.add(location)
+        if len(ship_queue) > len(enemy_locations):
+            # ignore enemies completely
+            enemy_locations = set()
+            # for pos in enemy_locations:
+            #     for d in Direction.get_all_cardinals() + [(0,0)]:
+            #         location = game_map.normalize(pos.directional_offset(d))
+            #         if game_map.calculate_distance(location,
+            #                                        closest_dropoff(pos)) > 1:
+            #             positions_used.add(location)
 
         # logging.info(enemy_locations)
 
@@ -266,7 +268,8 @@ def run():
                     constants.RETURN_AMOUNT):
                 # will staying make me cross over the line?
                 ship.staying = True
-                globals.move(ship.position, ship.position, ship, positions_used, command_queue)
+                globals.move(ship.position, ship.position, ship, positions_used,
+                             enemy_locations, command_queue)
                 continue
             # if num_players == 4 and ship.inspired:
             #     pos = ship.do_inspired_move(enemy_locations, positions_used)
@@ -340,7 +343,7 @@ def run():
             # logging.info(f'ship {ship.id} wanting to go to {p} with w:{w}')
 
             if p == ship.position:
-                globals.move(p, ship.position, ship, positions_used, command_queue)
+                globals.move(p, ship.position, ship, positions_used, enemy_locations, command_queue)
                 ship.dest = None
             else:
                 ship.dest = p
@@ -353,8 +356,8 @@ def run():
                     shortest = True
                 else:
                     shortest = False
-                globals.move(ship.dest, ship.position, ship, positions_used, command_queue,
-                             shortest=shortest)
+                globals.move(ship.dest, ship.position, ship, positions_used,
+                             enemy_locations, command_queue, shortest=shortest)
 
         halite_collected = me.halite_amount + spent_so_far - 5000
         ship_turns = 0
