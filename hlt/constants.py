@@ -159,7 +159,7 @@ const_dict = {
             'distance_factor': 1.5,
             'stay_factor': 3.7,
             'enemy_factor': 1.0,
-            'build_factor': 2200,
+            'build_factor': 3000,
             'build_halite_limit': 0.3
         },
     }

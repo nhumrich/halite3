@@ -91,9 +91,10 @@ class Ship(Entity):
         if globals.game.game_map.calculate_distance(
                 self.position,
                 globals.closest_dropoff(self.position, enemy=False)
-        ) + 1 >= constants.MAX_TURNS - globals.game.turn_number:
+        ) + 4 >= constants.MAX_TURNS - globals.game.turn_number:
             globals.endgame = True
-        return (self.halite_amount > constants.RETURN_AMOUNT) or globals.endgame
+            return True
+        return (self.halite_amount > constants.RETURN_AMOUNT)
 
     def find_best_move(self, game_map):
         pass
@@ -120,7 +121,7 @@ class Ship(Entity):
 
         # logging.info(f'insp {map[(0,0)]}')
         if map[(0, 0)] in (2, 3) and \
-                globals.game.game_map[self.position].halite_amount >= 50:
+                globals.game.game_map[self.position].halite_amount >= 200:
             return self.position
 
         else:

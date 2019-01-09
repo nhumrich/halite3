@@ -9,6 +9,8 @@ endgame = False
 
 claimed_moves = {}
 
+from hlt.positionals import Direction
+
 
 def closest_dropoff(position, enemy=False):
     min_so_far = 5000
@@ -68,14 +70,18 @@ def calculate_real_distance(target, source, positions,
         if collide and source in dropoffs:
             pass
         elif source in positions:
-            return -5, -5, [(0, 0)]
-        elif source in enemy_locations:
-            return -1, -1, [(0, 0)]
+            return 100, -5, [(0, 0)]
+        elif source in enemy_locations and amount > 0:
+            return 30, -1, [(0, 0)]
+        elif amount > 600:
+            for d in Direction.get_all_cardinals():
+                if game.game_map.normalize(source.directional_offset(d)) in enemy_locations:
+                    return 30, -1, [(0, 0)]
 
     if turn in (2, 3, 4):
         ship_id = claimed_moves[game.turn_number + 1].get(source)
         if ship_id and ship_id != ship.id:
-            return -2, -2, [(0,0)]
+            return 50, -2, [(0,0)]
 
     if target == source and turn != 0:
         if turn == 0:
@@ -107,8 +113,8 @@ def calculate_real_distance(target, source, positions,
             collected = math.ceil(game.game_map[new_pos].halite_amount * 0.25)
             new_amount = min(new_amount + collected, 1000)
         # logging.info(f'target {target} to source {source}: {}')
-        if num_moves <= -5:
-            return cur_best
+        # if num_moves >= 80:
+        #     return cur_best
 
         # if (num_moves < cur_best[0] or
         #         (num_moves == cur_best[0] and amount > cur_best[1])):
@@ -117,7 +123,24 @@ def calculate_real_distance(target, source, positions,
 
         return cur_best
 
-    all_possible = {(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)}
+    # stay, up, right, left, down - bottom left
+    # all_possible = {(0, 0),  (0, 1), (1, 0), (-1, 0), (0, -1)}
+    # stay, left, right, down, up - upper right
+    # all_possible = {(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)}
+    # stay, right, left, up, down - bottom left
+    # all_possible = {(0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)}
+    # stay, down, right, left, up - upper right
+    # all_possible = {(0, 0), (0, -1), (1, 0), (-1, 0), (0, 1)}
+    # stay, up, left, right, down - bottom left
+    # all_possible = {(0, 0), (0, 1), (-1, 0), (0, 1), (0, -1)}
+    # stay, up, left, down, right - bottom left
+    all_possible = {(0, 1), (-1, 0), (0, -1), (1, 0), (0, 0), }
+    # stay, down, left, up, right - bottom right
+    # all_possible = {(0, 0), (0, -1), (-1, 0), (0, 1), (1, 0)}
+    # all_possible = {(0,0), (0, -1), (1, 0), (-1, 0), (0, 1)}
+    # if game.turn_number < 20:
+    #     for dop in all_possible:
+    #         logging.info(dop)
     ideal = set()
     medio = set()
     fallback = set()
@@ -133,6 +156,7 @@ def calculate_real_distance(target, source, positions,
         direction = moves[0]
         ideal.add(direction)
         all_possible.discard(direction)
+
 
         reverse = (direction[0] * -1, direction[1] * -1)
         fallback.add(reverse)
@@ -153,20 +177,22 @@ def calculate_real_distance(target, source, positions,
     else:
         logging.info("How did this happen?")
 
-    cur_best = -1, -1, source
+    cur_best = 100, -10, source
     for d in ideal:
         cur_best = calc_move(d, cur_best)
 
-    if cur_best[0] == -1:
+    if cur_best[0] > 25:
+        logging.info('medio')
         for d in medio:
             cur_best = calc_move(d, cur_best)
 
-    if cur_best[0] == -1:
+    if cur_best[0] > 25:
+        logging.info('fallback')
         for d in fallback:
             cur_best = calc_move(d, cur_best)
 
-    if cur_best[0] == -1:
-        return -1, -1, [(0,0)]
+    if cur_best[0] >= 100:
+        return 100, -10, [(0,0)]
 
     # now calc out own move
     num_moves, new_amount, direcs = cur_best
@@ -175,4 +201,6 @@ def calculate_real_distance(target, source, positions,
 
     num_moves += 1 + stay_moves
 
+    if turn == 0:
+        logging.info(f'{ship.id}, {num_moves}, {new_amount}, {direcs}')
     return num_moves, new_amount, direcs

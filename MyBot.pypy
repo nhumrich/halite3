@@ -63,17 +63,6 @@ def find_best_path_to_target():
         pass
 
 
-def closest_dropoff(position):
-    min_so_far = 5000
-    closest_so_far = None
-    for do in dropoffs:
-        distance = game.game_map.calculate_distance(position, do)
-        if distance < min_so_far:
-            min_so_far = distance
-            closest_so_far = do
-    return closest_so_far
-
-
 def get_halite_amount():
     hal = 0
     for x, y in itertools.product(range(game.game_map.width), range(game.game_map.height)):
@@ -168,10 +157,10 @@ def run():
         # logging.info(top10)
 
         # sort ships by proximity to shipyard
-        # ship_queue = sorted(ship_queue, key=lambda s: game_map.calculate_distance(s.position, syp),
-        #                     reverse=True)
+        ship_queue = sorted(ship_queue, key=lambda s: game_map.calculate_distance(s.position, syp),
+                            reverse=True)
         # sort ships by id
-        ship_queue = sorted(ship_queue, key=lambda s: s.id)
+        # ship_queue = sorted(ship_queue, key=lambda s: s.id)
 
         dropoff = False
         for ship in ship_queue:
@@ -204,7 +193,7 @@ def run():
             # should we build a drop-off?
             elif (len(ship_queue) >= constants.SHIP_DO_RATIO * len(dropoffs) and
                   ship.position in do_spots and
-                  game_map.calculate_distance(ship.position, closest_dropoff(ship.position)) >
+                  game_map.calculate_distance(ship.position, globals.closest_dropoff(ship.position)) >
                   constants.DO_DISTANCE and
                   me.halite_amount > constants.DROPOFF_COST -
                   game_map[ship.position].halite_amount + ship.halite_amount and
@@ -238,12 +227,15 @@ def run():
         if len(ship_queue) > len(enemy_locations):
             # ignore enemies completely
             enemy_locations = set()
-            # for pos in enemy_locations:
-            #     for d in Direction.get_all_cardinals() + [(0,0)]:
-            #         location = game_map.normalize(pos.directional_offset(d))
-            #         if game_map.calculate_distance(location,
-            #                                        closest_dropoff(pos)) > 1:
-            #             positions_used.add(location)
+        # else:
+        #     for pos in copy(enemy_locations):
+        #         for d in Direction.get_all_cardinals() + [(0,0)]:
+        #             location = game_map.normalize(pos.directional_offset(d))
+        #             if game_map.calculate_distance(location,
+        #                                            closest_dropoff(pos)) > 1:
+        #                 enemy_locations.add(location)
+        #             else:
+        #                 enemy_locations.discard(location)
 
         # logging.info(enemy_locations)
 
@@ -259,7 +251,11 @@ def run():
                 d = ships_des.pop(ship.id, None)
                 destinations.pop(d, None)
 
-                ship.dest = closest_dropoff(ship.position)
+                if ship.halite_amount < 300:
+                    enemy = True
+                else:
+                    enemy = False
+                ship.dest = globals.closest_dropoff(ship.position, enemy=False)
 
         remaining_ships = [ship for ship in ship_queue if not ship.returning and not ship.staying]
         while len(remaining_ships) > 0:
@@ -271,13 +267,13 @@ def run():
                 globals.move(ship.position, ship.position, ship, positions_used,
                              enemy_locations, command_queue)
                 continue
-            # if num_players == 4 and ship.inspired:
-            #     pos = ship.do_inspired_move(enemy_locations, positions_used)
-            #     if pos is not None:
-            #         logging.info('bam')
-            #         globals.move(pos, ship.position, ship, positions_used, command_queue, la=4)
-            #         ship.staying = True
-            #         continue
+            if num_players == 4 and ship.inspired and halite_percent < 0.2:
+                pos = ship.do_inspired_move(enemy_locations, positions_used)
+                if pos is not None:
+                    logging.info('bam')
+                    globals.move(pos, ship.position, ship, positions_used, enemy_locations, command_queue, la=3)
+                    ship.staying = True
+                    continue
 
             # elif ship in ships_des:
             #     # target_location = ships_des[ship]
@@ -287,8 +283,8 @@ def run():
             #     # else:
             #     ship.dest = ships_des[ship]
             #     continue
-            if ship.id == 3 and 17 < cur_turn < 22:
-                pass
+            # if ship.id == 3 and 17 < cur_turn < 22:
+            #     pass
 
             # logging.info(f'd {destinations}')
             ranks = {}
