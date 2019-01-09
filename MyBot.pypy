@@ -157,10 +157,10 @@ def run():
         # logging.info(top10)
 
         # sort ships by proximity to shipyard
-        ship_queue = sorted(ship_queue, key=lambda s: game_map.calculate_distance(s.position, syp),
-                            reverse=True)
+        # ship_queue = sorted(ship_queue, key=lambda s: game_map.calculate_distance(s.position, syp),
+        #                     reverse=True)
         # sort ships by id
-        # ship_queue = sorted(ship_queue, key=lambda s: s.id)
+        ship_queue = sorted(ship_queue, key=lambda s: s.id)
 
         dropoff = False
         for ship in ship_queue:
