@@ -105,7 +105,9 @@ class Ship(Entity):
         map = {}
         # logging.info(f'enemies: {enemy_locations}')
         for x, y in itertools.product(range(-4, 5), range(-4, 5)):
-            if self.position.directional_offset((x, y)) in enemy_locations:
+            p = self.position.directional_offset((x, y))
+            if (p in enemy_locations and
+                    globals.game.game_map.calculate_distance(p, self.position) <= 4):
                 local_enemies.append(self.position.directional_offset((x, y)))
 
         # logging.info(f'local: {local_enemies}')

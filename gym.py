@@ -65,8 +65,8 @@ class Bot:
             self.constants.append(constant)
             return constant
 
-        # get_constant('return_amount', 500, 1000)
-        get_constant('look_amount', 10, 300)
+        get_constant('return_amount', 500, 1200)
+        get_constant('look_amount', 50, 400)
         get_constant('so_look_amount', 2, 200)
         get_constant('ship_do_ratio', 5, 30)
         get_constant('do_distance', 1, 50)
@@ -108,8 +108,8 @@ class Bot:
 
 def do_round(bots: List[Bot]):
 
-    run_string = ['./halite', '--replay-directory', 'replays/', '--width', '32', '--height', '32', '--results-as-json']
-    command = 'python3 run.py '
+    run_string = ['./halite', '--replay-directory', 'replays/', '--width', '56', '--height', '56', '--results-as-json']
+    command = 'python3 MyBot.pypy '
 
     for b in bots:
         print(b)
@@ -181,18 +181,18 @@ def run_gym():
 
 def seed():
     constants = []
-    # constants.append(Constant('return_amount', 500, 1000, val=850))
-    constants.append(Constant('look_amount', 100, 300, val=200))
-    constants.append(Constant('so_look_amount', 2, 200, val=50))
-    constants.append(Constant('ship_do_ratio', 5, 30, val=15))
-    constants.append(Constant('do_distance', 1, 50, val=15))
-    constants.append(Constant('do_turn_factor', 0.1, 1.0, val=0.4))
-    constants.append(Constant('do_halite_factor', 0.1, 0.9, val=0.5))
-    constants.append(Constant('distance_factor', 0.1, 5.0, val=1.0))
-    constants.append(Constant('stay_factor', 0.1, 5.0, val=1.0))
+    constants.append(Constant('return_amount', 500, 1000, val=869))
+    constants.append(Constant('look_amount', 100, 300, val=281))
+    constants.append(Constant('so_look_amount', 2, 200, val=153))
+    constants.append(Constant('ship_do_ratio', 5, 30, val=17))
+    constants.append(Constant('do_distance', 1, 50, val=12))
+    constants.append(Constant('do_turn_factor', 0.1, 1.0, val=0.5))
+    constants.append(Constant('do_halite_factor', 0.1, 0.9, val=0.6))
+    constants.append(Constant('distance_factor', 0.1, 5.0, val=3.2))
+    constants.append(Constant('stay_factor', 0.1, 5.0, val=1.8))
     # constants.append(Constant('enemy_factor', 0.0, 3.0, val=1.0))
-    constants.append(Constant('build_factor', 800, 4000, val=1500))
-    constants.append(Constant('build_halite_limit', 0.1, 0.9, val=0.5))
+    constants.append(Constant('build_factor', 800, 4000, val=3285))
+    constants.append(Constant('build_halite_limit', 0.1, 0.9, val=0.3))
     return constants
 
 

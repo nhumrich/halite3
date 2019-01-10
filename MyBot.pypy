@@ -169,7 +169,7 @@ def run():
             num_of_enemies = 0
             for x, y in itertools.product(range(-4, 5), range(-4, 5)):
                 pos = ship.position.directional_offset((x,y))
-                if pos in enemy_locations:
+                if pos in enemy_locations and game_map.calculate_distance(pos, ship.position) <=4:
                     num_of_enemies += 1
                 if num_of_enemies >= 2:
                     ship.inspired = True
@@ -240,10 +240,23 @@ def run():
         # logging.info(enemy_locations)
 
         for ship in ship_queue:
+
+            if ship.staying:
+                continue
             if ship.position in dropoffs:
                 returning.discard(ship.id)
                 ship.returning = False
-            elif ship.id in returning and not ship.staying:
+            elif (
+                    ship.halite_amount < constants.RETURN_AMOUNT <
+                    ship.halite_amount + ship.collect_amount):
+                # will staying make me cross over the line?
+                ship.staying = True
+                globals.move(ship.position, ship.position, ship, positions_used,
+                             enemy_locations, command_queue)
+                ship.dest = None
+                # logging.info(f'{ship.id} staying to gather')
+                continue
+            elif ship.id in returning:
                 # move to drop-off
                 # logging.info('move to dropoff')
                 ship.returning = True
@@ -260,17 +273,11 @@ def run():
         remaining_ships = [ship for ship in ship_queue if not ship.returning and not ship.staying]
         while len(remaining_ships) > 0:
             ship = remaining_ships.pop(0)
-            if (ship.halite_amount + ship.collect_amount >
-                    constants.RETURN_AMOUNT):
-                # will staying make me cross over the line?
-                ship.staying = True
-                globals.move(ship.position, ship.position, ship, positions_used,
-                             enemy_locations, command_queue)
-                continue
-            if num_players == 4 and ship.inspired and halite_percent < 0.2:
+            # logging.info(f'{ship.id} calculating')
+            if num_players == 4 and ship.inspired and halite_percent < 0.5:
                 pos = ship.do_inspired_move(enemy_locations, positions_used)
                 if pos is not None:
-                    logging.info('bam')
+                    # logging.info('bam')
                     globals.move(pos, ship.position, ship, positions_used, enemy_locations, command_queue, la=3)
                     ship.staying = True
                     continue
