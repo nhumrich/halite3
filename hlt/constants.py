@@ -131,38 +131,35 @@ const_dict = {
             'distance_factor': 3.1,
             'stay_factor': 2.1,
             'enemy_factor': 1.0,
-            'build_factor': 2600,
+            'build_factor': 2700,
             'build_halite_limit': 0.3
         },
-        #--name 0 --return_amount 895 --look_amount 385 --so_look_amount 152
-        # --ship_do_ratio 5 --do_distance 26 --do_turn_factor 0.6 --do_halite_factor 0.1
-        # --distance_factor 4.0 --stay_factor 1.6 --build_factor 1040 --build_halite_limit 0.5
         56: {
-            'return_amount': 895,
-            'look_amount': 385,
-            'so_look_amount': 152,
-            'ship_do_ratio': 5,
-            'do_distance': 26,
-            'do_turn_factor': 0.6,
-            'do_halite_factor': 0.1,
-            'distance_factor': 4.0,
-            'stay_factor': 1.6,
+            'return_amount': 930,
+            'look_amount': 300,
+            'so_look_amount': 170,
+            'ship_do_ratio': 18,
+            'do_distance': 16,
+            'do_turn_factor': 0.5,
+            'do_halite_factor': 0.5,
+            'distance_factor': 3.1,
+            'stay_factor': 2.1,
             'enemy_factor': 1.0,
-            'build_factor': 1040,
-            'build_halite_limit': 0.5
+            'build_factor': 2800,
+            'build_halite_limit': 0.3
         },
         64: {
             'return_amount': 930,
             'look_amount': 300,
-            'so_look_amount': 160,
-            'ship_do_ratio': 10,
+            'so_look_amount': 170,
+            'ship_do_ratio': 18,
             'do_distance': 16,
-            'do_turn_factor': 0.4,
+            'do_turn_factor': 0.5,
             'do_halite_factor': 0.5,
-            'distance_factor': 1.5,
-            'stay_factor': 3.7,
+            'distance_factor': 3.1,
+            'stay_factor': 2.1,
             'enemy_factor': 1.0,
-            'build_factor': 3000,
+            'build_factor': 2900,
             'build_halite_limit': 0.3
         },
     }
