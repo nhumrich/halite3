@@ -73,7 +73,7 @@ def calculate_real_distance(target, source, positions,
             return 100, -5, [(0, 0)]
         elif source in enemy_locations and amount > 0:
             return 30, -1, [(0, 0)]
-        elif amount > 600:
+        elif amount > 100:
             for d in Direction.get_all_cardinals():
                 if game.game_map.normalize(source.directional_offset(d)) in enemy_locations:
                     return 30, -1, [(0, 0)]
