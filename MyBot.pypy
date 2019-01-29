@@ -129,7 +129,7 @@ def run():
                     # total_so_far += spot_amount
             highs.append(PP(total_so_far, Position(x,y)))
         """
-        enemy_locations = {ship.position for i in game.players for ship in game.players[i].get_ships() if game.players[i].id != game.my_id}
+        enemy_locations = {ship.position: ship for i in game.players for ship in game.players[i].get_ships() if game.players[i].id != game.my_id}
         # for loc in enemy_locations:
         #     if loc in destinations:
         #         sp = destinations.pop(loc, None)
@@ -226,7 +226,7 @@ def run():
 
         if len(ship_queue) > len(enemy_locations):
             # ignore enemies completely
-            enemy_locations = set()
+            enemy_locations = {}
         # else:
         #     for pos in copy(enemy_locations):
         #         for d in Direction.get_all_cardinals() + [(0,0)]:

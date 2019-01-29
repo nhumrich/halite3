@@ -71,8 +71,13 @@ def calculate_real_distance(target, source, positions,
             pass
         elif source in positions:
             return 100, -5, [(0, 0)]
-        elif source in enemy_locations and amount > 0:
-            return 30, -1, [(0, 0)]
+        elif source in enemy_locations and amount > 100:
+            enemy_ship = enemy_locations[source]
+            if enemy_ship.halite_amount > 600:
+                # ignore this ship
+                pass
+            else:
+                return 30, -1, [(0, 0)]
         elif amount > 600:
             for d in Direction.get_all_cardinals():
                 if game.game_map.normalize(source.directional_offset(d)) in enemy_locations:
